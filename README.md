@@ -131,6 +131,13 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 * **Resilient MCP Bridging**: Fully configured the `owl-resilient-http` MCP server into OpenCode settings to ensure high-uptime failover translation of semantic searches.
 * **Ecosystem Integrity**: Integrated advanced user-level systemd process verification inside `validate_ecosystem.sh` to resolve process tracking false-positives under UID mapping limits.
 
+### May 31, 2026: Installer Upgrades, Self-Healing Diagnostics & Alias Integration
+* **Advanced Proxy Defense (v3.2)**: Upgraded `install_owl_agent.sh` to provision the robust `proxy_defense_fixed_v3.py` script containing weighted proxy selection, per-domain rate limiting, a domain circuit breaker, and automatic multi-provider credentials/auth injection.
+* **Inline Diagnostics Suite**: Integrated the secure `diagnose_opencode.sh` self-healing script inline inside the core OWL-Agent installer (`install_owl_agent.sh`), deploying it natively to `~/.owl-agent/diagnose_opencode.sh`.
+* **Dynamic Shortcut Integration**: Added an automated script hook inside `install_owl_agent.sh` that dynamically appends the `owl-check` shell alias to the user's `~/.bashrc`, enabling single-command system state queries.
+* **Troubleshooting Orchestration**: Patched the unified `install_kiro_owl_agent.sh` script to output automated diagnostic guidance referencing the `owl-check` suite in its final installation summary.
+
 ---
 
 *Maintained under GitHub pages for marktantongco.*
+

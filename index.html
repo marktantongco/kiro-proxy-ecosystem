@@ -1987,6 +1987,11 @@ echo -e "\${YELLOW}  Token refresh (if auth expires):\${NC}"
 echo "    source \$VENV_DIR/bin/activate && kiro-cli login && deactivate"
 echo "    systemctl --user restart kiro-gateway.service"
 echo ""
+echo -e "\${CYAN}  Troubleshooting & Self-Healing Diagnostics:\${NC}"
+echo "    Run the unified OWL diagnostics suite to verify your ports and connectivity:"
+echo "    owl-check"
+echo "    (or: \$HOME/.owl-agent/diagnose_opencode.sh)"
+echo ""
 `
     },
     {
@@ -2025,15 +2030,17 @@ echo ""
 echo "[2/5] Creating directories..."
 mkdir -p "\$INSTALL_DIR" "\$CONFIG_DIR" "\$CACHE_DIR"
 
-# ---- [3/5] Proxy defense script (unchanged) ----
+# ---- [3/5] Proxy defense script ----
 echo ""
-echo "[3/5] Writing patched proxy_defense_fixed_v2.py ..."
-cat > "\$INSTALL_DIR/proxy_defense_fixed_v2.py" << 'EOF'
+echo "[3/5] Writing patched proxy_defense_fixed_v3.py ..."
+cat > "\$INSTALL_DIR/proxy_defense_fixed_v3.py" << 'EOF'
 #!/usr/bin/env python3
 """
-🦉 OWL-AGENT PROXY DEFENSE STACK v3.1 (Patched)
-- Immediate proxy ban on any connection error
-- Automatic fallback to direct connection when all proxies fail
+🦉 OWL-AGENT PROXY DEFENSE STACK v3.2
+- Config loading and auth injection
+- Health check pipeline
+- Weighted proxy selection
+- Per-domain circuit breaker
 """
 
 import asyncio
@@ -2042,6 +2049,7 @@ import json
 import time
 import random
 import logging
+import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, Callable, Awaitable, List
@@ -2051,23 +2059,12 @@ from urllib.parse import urlparse
 import aiohttp
 import aiofiles
 
-try:
-    import httpx
-    HTTP2_AVAILABLE = True
-except ImportError:
-    HTTP2_AVAILABLE = False
-
-try:
-    from curl_cffi.requests import Session as CurlSession
-    JA3_AVAILABLE = True
-except ImportError:
-    JA3_AVAILABLE = False
-
 CACHE_DIR = Path.home() / ".owl-agent" / "cache" / "http"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 CONFIG_DIR = Path.home() / ".owl-agent" / "config"
 PROXY_POOL_FILE = CONFIG_DIR / "proxy_pool.json"
+PROXY_CREDS_FILE = CONFIG_DIR / "proxy_credentials.json"
 
 DEFAULT_TTL = 300
 DEFAULT_RATE = 1.0
@@ -2117,53 +2114,119 @@ class ProxyEntry:
     protocol: str
     source: str
     tier: int
+    auth_ref: Optional[str] = None
     healthy: bool = True
     last_check: float = 0.0
     fail_count: int = 0
     ban_until: float = 0.0
     latency_ms: float = 9999.0
+    success_count: int = 0
+    
     def is_banned(self) -> bool:
         return time.time() < self.ban_until
+        
     def mark_failed(self):
         self.fail_count += 1
-        # SINGLE-STRIKE BAN: ban immediately for 60 seconds
-        self.ban_until = time.time() + 60
+        # Exponential backoff: 60 * (2 ^ (fail_count - 1))
+        backoff = 60 * (2 ** min(self.fail_count - 1, 6))
+        self.ban_until = time.time() + backoff
         self.healthy = False
-        logger.warning(f"Proxy banned (60s): {self.url}")
+        logger.warning(f"Proxy banned ({backoff}s): {self.url}")
+        
     def mark_success(self, latency_ms: float):
         self.fail_count = 0
         self.healthy = True
-        self.latency_ms = latency_ms
+        self.latency_ms = (self.latency_ms * 0.7) + (latency_ms * 0.3) if self.success_count > 0 else latency_ms
         self.last_check = time.time()
+        self.success_count += 1
+        
+    def get_score(self) -> float:
+        if not self.healthy or self.is_banned():
+            return 0.0
+        # Score based on latency and success
+        base_score = 10000 / max(self.latency_ms, 1)
+        tier_multiplier = {1: 1.5, 2: 1.0, 3: 0.5}.get(self.tier, 1.0)
+        success_bonus = min(self.success_count, 10) * 0.1
+        return base_score * tier_multiplier * (1 + success_bonus)
 
 class ProxyPoolLoader:
-    def __init__(self, pool_file: Path = PROXY_POOL_FILE):
+    def __init__(self, pool_file: Path = PROXY_POOL_FILE, creds_file: Path = PROXY_CREDS_FILE):
         self.pool_file = pool_file
+        self.creds_file = creds_file
+        
+    def _load_credentials(self) -> dict:
+        if not self.creds_file.exists():
+            return {}
+        try:
+            with open(self.creds_file) as f:
+                data = json.load(f)
+                return data.get("providers", {})
+        except Exception as e:
+            logger.error(f"Failed to load credentials: {e}")
+            return {}
+
+    def _inject_auth(self, url: str, auth_ref: str, credentials: dict) -> str:
+        if not auth_ref or auth_ref not in credentials:
+            return url
+        creds = credentials[auth_ref]
+        username = os.getenv(f"PROXY_{auth_ref.upper()}_USERNAME", creds.get("username", ""))
+        password = os.getenv(f"PROXY_{auth_ref.upper()}_PASSWORD", creds.get("password", ""))
+        
+        if not username or not password:
+            return url
+            
+        parsed = urlparse(url)
+        return f"{parsed.scheme}://{username}:{password}@{parsed.netloc}"
+
     def load(self) -> List[ProxyEntry]:
         if not self.pool_file.exists():
             return []
+        
+        credentials = self._load_credentials()
+            
         try:
             with open(self.pool_file) as f:
                 config = json.load(f)
         except Exception:
             return []
+            
         proxies = []
         for provider in config.get("tier_1_managed_free", {}).get("providers", []):
+            provider_auth_ref = provider.get("auth_ref")
             for proxy in provider.get("proxies", []):
+                auth_ref = proxy.get("auth_ref", provider_auth_ref)
+                
+                # Default Webshare IP rotation formatting
+                url = proxy["url"]
+                if auth_ref == "webshare" and credentials.get("webshare", {}).get("backbone_prefix"):
+                    creds = credentials["webshare"]
+                    if creds.get("username") and creds.get("password") and proxy.get("backbone_id"):
+                        username = f"{creds['username']}-{creds['backbone_prefix']}{proxy['backbone_id']}"
+                        parsed = urlparse(url)
+                        url = f"{parsed.scheme}://{username}:{creds['password']}@{parsed.netloc}"
+                elif auth_ref:
+                    url = self._inject_auth(url, auth_ref, credentials)
+
                 proxies.append(ProxyEntry(
-                    url=proxy["url"],
+                    url=url,
                     proxy_type=proxy.get("type", "datacenter"),
                     protocol=proxy.get("protocols", ["HTTP"])[0].lower(),
                     source=provider["name"],
-                    tier=1
+                    tier=1,
+                    auth_ref=auth_ref
                 ))
         return proxies
+
+    async def fetch_worldpool_proxies(self, session: aiohttp.ClientSession) -> List[ProxyEntry]:
+        # Dummy fetch for Worldpool as per plan
+        return []
+        
     async def fetch_github_proxies(self, session: aiohttp.ClientSession) -> List[ProxyEntry]:
         proxies = []
         sources = [("https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/all/data.json", "json")]
         for url, fmt in sources:
             try:
-                async with session.get(url, timeout=30) as resp:
+                async with session.get(url, timeout=10) as resp:
                     if resp.status != 200: continue
                     if fmt == "json":
                         data = await resp.json()
@@ -2183,22 +2246,7 @@ class ProxyPoolLoader:
                                 proxies.append(ProxyEntry(url=f"http://{line.strip()}", proxy_type="public", protocol="http", source="github", tier=2))
                 break
             except Exception as e:
-                logger.warning(f"GitHub fetch failed: {e}")
-        return proxies
-    async def fetch_public_api_proxies(self, session: aiohttp.ClientSession) -> List[ProxyEntry]:
-        proxies = []
-        apis = ["https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=text&limit=100"]
-        for url in apis:
-            try:
-                async with session.get(url, timeout=30) as resp:
-                    if resp.status != 200: continue
-                    text = await resp.text()
-                    for line in text.strip().split("\\n")[:50]:
-                        if line.strip():
-                            proxies.append(ProxyEntry(url=line.strip(), proxy_type="public", protocol="http", source="api", tier=3))
-                break
-            except Exception as e:
-                logger.warning(f"API fetch failed: {e}")
+                logger.debug(f"GitHub fetch failed: {e}")
         return proxies
 
 class HTTPCache:
@@ -2212,33 +2260,11 @@ class HTTPCache:
         key = self._key(method, url, params, protocol)
         if key in self._memory and self._memory[key].is_fresh():
             return self._memory[key]
-        path = CACHE_DIR / f"{key}.json"
-        if path.exists():
-            try:
-                async with aiofiles.open(path, 'r') as f:
-                    data = json.loads(await f.read())
-                cached = CachedResponse(
-                    status=data["status"], content=data["content"].encode('utf-8', errors='replace'),
-                    headers=data["headers"], timestamp=data["timestamp"], ttl=data["ttl"], protocol=data.get("protocol", "http/1.1")
-                )
-                if cached.is_fresh():
-                    async with self._lock:
-                        self._memory[key] = cached
-                    return cached
-                else:
-                    path.unlink()
-            except Exception:
-                pass
         return None
     async def set(self, method: str, url: str, response: CachedResponse, params: Optional[Dict] = None):
         key = self._key(method, url, params, response.protocol)
         async with self._lock:
             self._memory[key] = response
-        path = CACHE_DIR / f"{key}.json"
-        data = {"status": response.status, "content": response.content.decode('utf-8', errors='replace'), "headers": response.headers,
-                "timestamp": response.timestamp, "ttl": response.ttl, "protocol": response.protocol}
-        async with aiofiles.open(path, 'w') as f:
-            await f.write(json.dumps(data))
 
 class RequestDeduplicator:
     def __init__(self):
@@ -2276,27 +2302,83 @@ class DomainRateLimiter:
                 self._buckets[domain] = TokenBucket(rate=self.default_rate, capacity=5.0, tokens=5.0)
         await self._buckets[domain].acquire(tokens)
 
+class HealthChecker:
+    @staticmethod
+    async def check(session: aiohttp.ClientSession, proxy: ProxyEntry) -> bool:
+        try:
+            start = time.time()
+            async with session.get("http://httpbin.org/ip", proxy=proxy.url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    proxy.mark_success((time.time() - start) * 1000)
+                    return True
+        except Exception:
+            pass
+        proxy.mark_failed()
+        return False
+
 class ProxyRotator:
     def __init__(self):
         self.proxies: List[ProxyEntry] = []
-        self._index = 0
         self._lock = asyncio.Lock()
         self._loader = ProxyPoolLoader()
+        
     async def load_all_sources(self, session: aiohttp.ClientSession):
         self.proxies = self._loader.load()
         self.proxies.extend(await self._loader.fetch_github_proxies(session))
-        self.proxies.extend(await self._loader.fetch_public_api_proxies(session))
+        # Pre-validate some proxies
+        tasks = [HealthChecker.check(session, p) for p in self.proxies[:20]]
+        await asyncio.gather(*tasks)
         logger.info(f"Loaded {len(self.proxies)} proxies")
+        
     async def get_proxy(self) -> Optional[ProxyEntry]:
         async with self._lock:
             healthy = [p for p in self.proxies if not p.is_banned()]
             if not healthy:
                 return None
-            p = healthy[self._index % len(healthy)]
-            self._index += 1
-            return p
+            
+            # Weighted random selection based on score
+            scores = [p.get_score() for p in healthy]
+            total = sum(scores)
+            if total == 0:
+                return random.choice(healthy)
+                
+            r = random.uniform(0, total)
+            current = 0
+            for p, score in zip(healthy, scores):
+                current += score
+                if r <= current:
+                    return p
+            return healthy[-1]
+            
     async def mark_banned(self, proxy: ProxyEntry):
         proxy.mark_failed()
+
+class DomainCircuitBreaker:
+    def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 60):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.failures: Dict[str, int] = defaultdict(int)
+        self.open_until: Dict[str, float] = {}
+        
+    def record_failure(self, domain: str):
+        self.failures[domain] += 1
+        if self.failures[domain] >= self.failure_threshold:
+            self.open_until[domain] = time.time() + self.recovery_timeout
+            logger.warning(f"Circuit breaker OPEN for {domain}")
+            
+    def record_success(self, domain: str):
+        self.failures[domain] = 0
+        if domain in self.open_until:
+            del self.open_until[domain]
+            logger.info(f"Circuit breaker CLOSED for {domain}")
+            
+    def can_request(self, domain: str) -> bool:
+        if domain in self.open_until:
+            if time.time() > self.open_until[domain]:
+                # Half-open state
+                return True
+            return False
+        return True
 
 class ResilientClient:
     def __init__(self, cache_ttl: int = DEFAULT_TTL, rate_limit: float = DEFAULT_RATE, max_retries: int = MAX_RETRIES):
@@ -2304,6 +2386,7 @@ class ResilientClient:
         self.dedup = RequestDeduplicator()
         self.limiter = DomainRateLimiter(rate_limit)
         self.rotator = ProxyRotator()
+        self.circuit_breaker = DomainCircuitBreaker()
         self.max_retries = max_retries
         self._session: Optional[aiohttp.ClientSession] = None
 
@@ -2321,16 +2404,22 @@ class ResilientClient:
         cached = await self.cache.get(method, url, params)
         if cached:
             return cached
+            
+        domain = urlparse(url).netloc or url
+        if not self.circuit_breaker.can_request(domain):
+            raise RuntimeError(f"Circuit breaker open for {domain}")
+
         async def factory():
-            return await self._execute_with_retry(method, url, params, headers, **kwargs)
+            return await self._execute_with_retry(method, url, params, headers, domain, **kwargs)
         return await self.dedup.execute(method, url, params, "http/1.1", factory)
 
-    async def _execute_with_retry(self, method, url, params, headers, **kwargs):
+    async def _execute_with_retry(self, method, url, params, headers, domain, **kwargs):
         # Try proxies up to max_retries
         for attempt in range(self.max_retries):
             await self.limiter.acquire(url)
             proxy = await self.rotator.get_proxy()
             proxy_url = proxy.url if proxy else None
+            
             try:
                 start = time.time()
                 async with self._session.request(method, url, params=params, headers=headers,
@@ -2338,24 +2427,31 @@ class ResilientClient:
                     content = await resp.read()
                 latency = (time.time() - start) * 1000
                 response = CachedResponse(status=resp.status, content=content, headers=dict(resp.headers), timestamp=time.time(), ttl=self.cache.ttl)
+                
                 if proxy:
                     proxy.mark_success(latency)
+                self.circuit_breaker.record_success(domain)
+                
                 await self.cache.set(method, url, response, params)
+                
                 if resp.status in (429, 403, 407):
                     if proxy:
                         await self.rotator.mark_banned(proxy)
                     continue
                 return response
+                
             except (aiohttp.ClientOSError, aiohttp.ClientProxyConnectionError, aiohttp.ServerDisconnectedError, ConnectionResetError) as e:
                 if proxy:
                     await self.rotator.mark_banned(proxy)
-                logger.warning(f"Proxy failed ({proxy_url}): {e}, retry {attempt+1}/{self.max_retries}")
+                logger.warning(f"Proxy failed: {e}, retry {attempt+1}/{self.max_retries}")
                 continue
             except Exception as e:
                 if proxy:
                     await self.rotator.mark_banned(proxy)
-                logger.warning(f"Error with proxy {proxy_url}: {e}, retrying")
+                logger.warning(f"Error with proxy: {e}, retrying")
                 continue
+
+        self.circuit_breaker.record_failure(domain)
 
         # --- All proxies failed, try direct connection ---
         logger.info("All proxies exhausted, attempting direct connection...")
@@ -2365,8 +2461,10 @@ class ResilientClient:
                 content = await resp.read()
             response = CachedResponse(status=resp.status, content=content, headers=dict(resp.headers), timestamp=time.time(), ttl=self.cache.ttl)
             await self.cache.set(method, url, response, params)
+            self.circuit_breaker.record_success(domain)
             return response
         except Exception as e:
+            self.circuit_breaker.record_failure(domain)
             raise RuntimeError(f"Direct connection also failed: {e}")
 
     async def get_stats(self):
@@ -2374,7 +2472,7 @@ class ResilientClient:
         return {"proxies_total": len(self.rotator.proxies), "proxies_healthy": healthy}
 
 async def main():
-    print("🦉 OWL-AGENT Proxy Defense Stack v3.1 (Direct Fallback Enabled)")
+    print("🦉 OWL-AGENT Proxy Defense Stack v3.2 (Auth Injection Enabled)")
     async with ResilientClient() as client:
         stats = await client.get_stats()
         print(f"Proxy pool: {stats['proxies_total']} total, {stats['proxies_healthy']} healthy (non-banned)")
@@ -2491,7 +2589,7 @@ cat > "\$INSTALL_DIR/run.sh" << 'RUNNER'
 #!/bin/bash
 source "\$HOME/.owl-agent/venv/bin/activate"
 cd "\$HOME/.owl-agent"
-python proxy_defense_fixed_v2.py "\$@"
+python proxy_defense_fixed_v3.py "\$@"
 RUNNER
 chmod +x "\$INSTALL_DIR/run.sh"
 
@@ -2508,6 +2606,159 @@ exec kiro-cli "\$@"
 KIRO_WRAP
 chmod +x "\$INSTALL_DIR/kiro-cli"
 
+# ---- [6/5] Deploy Diagnostics & Self-Healing Tool ----
+echo ""
+echo "[6/5] Deploying diagnose_opencode.sh self-healing tool..."
+cat > "\$INSTALL_DIR/diagnose_opencode.sh" << 'DIAGNOSTICS'
+#!/usr/bin/env bash
+# 🦉 OWL-AGENT & OpenCode Proxy Diagnostic & Recovery Tool
+# This script rules out routing, port conflicts, socket mismatches, and proxy locks.
+
+set -u
+
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[0;33m'
+BLUE='\\033[0;34m'
+NC='\\033[0;3m' # No Color
+BOLD='\\033[1m'
+
+echo -e "\${BLUE}\${BOLD}================================================================\${NC}"
+echo -e "\${BLUE}\${BOLD}🦉 OWL-AGENT & OpenCode Proxy Diagnostic & Recovery Tool v1.0\${NC}"
+echo -e "\${BLUE}\${BOLD}================================================================\${NC}"
+
+# ---- Helper: Check if port is listening ----
+check_port() {
+    local port=\$1
+    local name=\$2
+    if ss -tulpn 2>/dev/null | grep -q ":\$port "; then
+        echo -e "  [\${GREEN}ONLINE\${NC}] Port \${BOLD}\$port\${NC} (\$name)"
+        return 0
+    else
+        echo -e "  [\${RED}OFFLINE\${NC}] Port \${BOLD}\$port\${NC} (\$name)"
+        return 1
+    fi
+}
+
+# ---- Helper: Run curl check through proxy ----
+check_curl() {
+    local url=\$1
+    local proxy=\$2
+    local name=\$3
+    
+    echo -n "  Testing \$name (\$url)... "
+    local code
+    if [ -n "\$proxy" ]; then
+        code=\$(curl -s -o /dev/null -w "%{http_code}" -x "\$proxy" --connect-timeout 5 "\$url" 2>/dev/null || echo "FAILED")
+    else
+        code=\$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "\$url" 2>/dev/null || echo "FAILED")
+    fi
+    
+    if [ "\$code" = "200" ] || [ "\$code" = "401" ] || [ "\$code" = "402" ] || [ "\$code" = "403" ] || [ "\$code" = "301" ] || [ "\$code" = "302" ]; then
+        echo -e "[\${GREEN}PASS\${NC}] (HTTP Status: \$code)"
+        return 0
+    else
+        echo -e "[\${RED}FAIL\${NC}] (HTTP Status: \$code)"
+        return 1
+    fi
+}
+
+# ==============================================================================
+# STAGE 1: PORT AND SERVICE CHECKS
+# ==============================================================================
+echo -e "\\n\${BOLD}[1/4] Checking Core Services & Listening Ports:\${NC}"
+SERVICES_OK=0
+
+check_port 60000 "OWL Forward Proxy" || SERVICES_OK=1
+check_port 7890 "Mihomo/Clash Upstream" || SERVICES_OK=1
+check_port 20128 "9Router Free AI Gateway" || SERVICES_OK=1
+check_port 8082 "FCC (Free Claude Code Proxy)" || SERVICES_OK=1
+check_port 8333 "Kiro Gateway" || SERVICES_OK=1
+check_port 48321 "Kiro Token Refresh Daemon" || SERVICES_OK=1
+
+if [ \$SERVICES_OK -ne 0 ]; then
+    echo -e "\${YELLOW}⚠️  Some background services are offline. Attempting automated restart...\${NC}"
+    systemctl --user daemon-reload
+    systemctl --user restart owl-forward-proxy 9router fcc kiro-tokend kiro-gateway 2>/dev/null
+    sleep 2
+    echo -e "\${BLUE}Re-evaluating services...\${NC}"
+    SERVICES_OK=0
+    check_port 60000 "OWL Forward Proxy" || SERVICES_OK=1
+    check_port 7890 "Mihomo/Clash Upstream" || SERVICES_OK=1
+    check_port 20128 "9Router" || SERVICES_OK=1
+fi
+
+# ==============================================================================
+# STAGE 2: UNIX DOMAIN SOCKET HEALTH
+# ==============================================================================
+echo -e "\\n\${BOLD}[2/4] Checking Terminal Unix Sockets (Kiro Integration):\${NC}"
+SOCKET_DIR="/run/user/\$(id -u)/kirorun/t"
+
+if [ -n "\${QTERM_SESSION_ID:-}" ]; then
+    echo -e "  Current Shell Session ID: \${BOLD}\$QTERM_SESSION_ID\${NC}"
+    EXPECTED_SOCKET="\$SOCKET_DIR/\$QTERM_SESSION_ID.sock"
+    if [ -S "\$EXPECTED_SOCKET" ]; then
+        echo -e "  [\${GREEN}OK\${NC}] Active Unix socket found at: \$EXPECTED_SOCKET"
+    else
+        echo -e "  [\${RED}FAIL\${NC}] Socket file NOT found: \$EXPECTED_SOCKET"
+        echo -e "  \${YELLOW}→ Root Cause: Your shell has a stale/orphaned session ID.\${NC}"
+        echo -e "  \${YELLOW}→ Resolution: Please open a NEW terminal window/tab to re-bind Kiro-CLI.\${NC}"
+    fi
+else
+    echo -e "  [\${YELLOW}INFO\${NC}] QTERM_SESSION_ID is not set in this environment (Normal for non-interactive runners)."
+fi
+
+# Show any active sockets that exist
+echo "  Active mounted sockets in directory:"
+ls -la "\$SOCKET_DIR" 2>/dev/null | grep ".sock" || echo "  (None found)"
+
+# ==============================================================================
+# STAGE 3: INTERNET & MODEL PROVIDER CONNECTIVITY
+# ==============================================================================
+echo -e "\\n\${BOLD}[3/4] Testing HTTP/HTTPS Tunneling & Bypass Routing:\${NC}"
+CONNECT_OK=0
+
+# Test general connectivity through proxy
+check_curl "https://www.google.com" "http://127.0.0.1:60000" "Google Connect" || CONNECT_OK=1
+
+# Test NVIDIA NIM bypass routing (ensuring it avoids Mihomo/Clash)
+check_curl "https://integrate.api.nvidia.com/v1/models" "http://127.0.0.1:60000" "NVIDIA Bypass Route" || CONNECT_OK=1
+
+# Test OpenCode Zen bypass routing (ensuring it avoids Mihomo/Clash)
+check_curl "https://opencode.ai/zen/v1/models" "http://127.0.0.1:60000" "OpenCode Zen Bypass Route" || CONNECT_OK=1
+
+if [ \$CONNECT_OK -eq 0 ]; then
+    echo -e "\\n\${GREEN}\${BOLD}🎉 ALL SYSTEMS GREEN! The proxy stack is working flawlessly.\${NC}"
+else
+    echo -e "\\n\${RED}\${BOLD}❌ Connection tests failed. Check forward-proxy logs for traceback:\${NC}"
+    tail -n 20 "\$HOME/.owl-agent/logs/forward-proxy.log"
+fi
+
+# ==============================================================================
+# STAGE 4: ENV AND CONFIG AUDIT
+# ==============================================================================
+echo -e "\\n\${BOLD}[4/4] Auditing Environment Variables:\${NC}"
+echo "  HTTP_PROXY=\${HTTP_PROXY:-Unset}"
+echo "  HTTPS_PROXY=\${HTTPS_PROXY:-Unset}"
+echo "  NO_PROXY=\${NO_PROXY:-Unset}"
+
+# Verify NO_PROXY remains clean to avoid leaks
+if [[ "\${NO_PROXY:-}" != "localhost,127.0.0.1,.local,.localdomain,::1" ]]; then
+    echo -e "  [\${YELLOW}WARNING\${NC}] NO_PROXY is modified. Keep it clean to prevent leaks."
+fi
+
+echo -e "\${BLUE}\${BOLD}================================================================\${NC}"
+DIAGNOSTICS
+chmod +x "\$INSTALL_DIR/diagnose_opencode.sh"
+
+# Auto-Register Alias in ~/.bashrc
+if ! grep -q "alias owl-check=" "\$HOME/.bashrc" 2>/dev/null; then
+    echo "" >> "\$HOME/.bashrc"
+    echo "# 🦉 OWL-AGENT Proxy Diagnostics & Self-Healing Suite Shortcut" >> "\$HOME/.bashrc"
+    echo "alias owl-check='\$INSTALL_DIR/diagnose_opencode.sh'" >> "\$HOME/.bashrc"
+    echo "✅ Registered 'owl-check' shortcut alias in ~/.bashrc"
+fi
+
 # ---- Final messages ----
 echo ""
 echo "============================================="
@@ -2516,6 +2767,10 @@ echo "============================================="
 echo ""
 echo "▶️  Run the proxy defense stack:"
 echo "   \$INSTALL_DIR/run.sh"
+echo ""
+echo "▶️  Run diagnostic self-healing suite:"
+echo "   owl-check"
+echo "   (or: \$INSTALL_DIR/diagnose_opencode.sh)"
 echo ""
 echo "▶️  Use kiro-cli:"
 echo "   \$INSTALL_DIR/kiro-cli [arguments]"
