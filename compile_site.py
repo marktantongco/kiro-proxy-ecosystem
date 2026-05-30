@@ -13,6 +13,21 @@ files_to_compile = [
         "relation": "Upstream patch script. Injects Clash proxy routing definitions into your local Python packages."
     },
     {
+        "path": "scripts/hermes_wrapper.sh",
+        "category": "Wrapper",
+        "relation": "Launcher wrapper that isolates HTTP_PROXY within standalone Hermes execution context."
+    },
+    {
+        "path": "scripts/agy_wrapper.sh",
+        "category": "Wrapper",
+        "relation": "Secure proxy launcher wrapper that dynamically unsets local variable scopes before running Antigravity."
+    },
+    {
+        "path": "scripts/kiro_gateway_wrapper.sh",
+        "category": "Wrapper",
+        "relation": "Wrapper script for launching the Kiro Terminal under custom environments."
+    },
+    {
         "path": "installers/install_kiro_owl_agent.sh",
         "category": "Installer",
         "relation": "Combination setup installer that automatically sets up local credentials databases, links, and Python wrappers."
@@ -51,6 +66,16 @@ files_to_compile = [
         "path": "configs/README_PROXY_ARCHITECTURE.md",
         "category": "Documentation",
         "relation": "Comprehensive proxy bypass routing architecture manual for NVIDIA NIM and OpenCode Zen model providers."
+    },
+    {
+        "path": "systemd/kiro-gateway.service",
+        "category": "Systemd Service",
+        "relation": "Systemd user service config for managing the Kiro API Translation Gateway service process."
+    },
+    {
+        "path": "systemd/owl-forward-proxy.service",
+        "category": "Systemd Service",
+        "relation": "Systemd user service config for running and monitoring the core OWL forward proxy stack."
     }
 ]
 

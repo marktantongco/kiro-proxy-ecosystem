@@ -683,7 +683,10 @@
                         <p class="step-desc">
                             <strong>Files Used:</strong> <code>Clash / Mihomo Core daemon</code><br>
                             <strong>Purpose:</strong> Sets up the foundational weighted proxy routing base on <strong>Port 7890</strong>. All external connections flow through this layer for geo-routing bypasses.<br>
-                            <strong>Action:</strong> Ensure Clash/Mihomo is active and listening locally: <code>systemctl --user status mihomo</code> or run manual binary check.
+                            <strong>Action:</strong> Ensure Clash/Mihomo is active and listening locally: <code>systemctl --user status mihomo</code> or run manual binary check.<br>
+                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('configs/ai-instructions-handover.md')">🔍 Inspect Handover Guide</button>
+                            </div>
                         </p>
                     </div>
 
@@ -694,6 +697,10 @@
                             <strong>Files Used:</strong> <code>installers/install_owl_agent.sh</code><br>
                             <strong>Purpose:</strong> Deduplicated Core Setup. Creates workspace directories, provisions local dynamic libraries, registers dependencies, downloads the Kiro CLI client native binaries, and creates local SQL database credentials mappings.<br>
                             <strong>Action:</strong> Run: <code>chmod +x installers/install_owl_agent.sh && ./installers/install_owl_agent.sh</code>.
+                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('installers/install_owl_agent.sh')">🔍 Inspect Script</button>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/installers/install_owl_agent.sh" download>📥 Download</a>
+                            </div>
                         </p>
                     </div>
 
@@ -704,6 +711,10 @@
                             <strong>Files Used:</strong> <code>installers/install_kiro_owl_agent.sh</code><br>
                             <strong>Purpose:</strong> Automates Python virtual environment creation, clones the <code>kiro-gateway</code> translation engine, and automatically updates key schema entries (such as heavy/light templates) in your local <code>opencode.jsonc</code> config.<br>
                             <strong>Action:</strong> Run: <code>chmod +x installers/install_kiro_owl_agent.sh && ./installers/install_kiro_owl_agent.sh</code>.
+                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('installers/install_kiro_owl_agent.sh')">🔍 Inspect Script</button>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/installers/install_kiro_owl_agent.sh" download>📥 Download</a>
+                            </div>
                         </p>
                     </div>
 
@@ -713,7 +724,13 @@
                         <p class="step-desc">
                             <strong>Files Used:</strong> <code>systemd/kiro-gateway.service</code>, <code>systemd/owl-forward-proxy.service</code><br>
                             <strong>Purpose:</strong> Registers the stack as automatic background processes managed by systemd under user-level context. Ensures self-healing restarts on failure.<br>
-                            <strong>Action:</strong> Copy to systemd directories: <code>cp systemd/*.service ~/.config/systemd/user/</code>, reload systemd, and enable/start the daemons: <code>systemctl --user daemon-reload && systemctl --user enable --now owl-forward-proxy.service kiro-gateway.service</code>.
+                            <strong>Action:</strong> Copy to systemd directories: <code>cp systemd/*.service ~/.config/systemd/user/</code>, reload systemd, and enable/start the daemons.<br>
+                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('systemd/owl-forward-proxy.service')">🔍 Inspect Proxy Unit</button>
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('systemd/kiro-gateway.service')">🔍 Inspect Gateway Unit</button>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/systemd/owl-forward-proxy.service" download>📥 Proxy service</a>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/systemd/kiro-gateway.service" download>📥 Gateway service</a>
+                            </div>
                         </p>
                     </div>
 
@@ -724,6 +741,12 @@
                             <strong>Files Used:</strong> <code>scripts/patch_owl_proxy.sh</code>, <code>scripts/validate_ecosystem.sh</code><br>
                             <strong>Purpose:</strong> Overwrites downstream proxy code blocks with Clash upstream routing parameters, terminates conflicting background processes, and unsets manual variable pollution.<br>
                             <strong>Action:</strong> Run: <code>chmod +x scripts/patch_owl_proxy.sh && ./scripts/patch_owl_proxy.sh</code>.
+                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/patch_owl_proxy.sh')">🔍 Inspect Patch Script</button>
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/validate_ecosystem.sh')">🔍 Inspect Validator</button>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/patch_owl_proxy.sh" download>📥 Download Patch</a>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/validate_ecosystem.sh" download>📥 Download Validator</a>
+                            </div>
                         </p>
                     </div>
 
@@ -731,9 +754,17 @@
                         <div class="step-number">6</div>
                         <h3 class="step-title">Secure Command Shell Launcher Wrappers</h3>
                         <p class="step-desc">
-                            <strong>Files Used:</strong> <code>scripts/hermes_wrapper.sh</code>, <code>scripts/agy_wrapper.sh</code><br>
+                            <strong>Files Used:</strong> <code>scripts/hermes_wrapper.sh</code>, <code>scripts/agy_wrapper.sh</code>, <code>scripts/kiro_gateway_wrapper.sh</code><br>
                             <strong>Purpose:</strong> Wraps execution of hermes, agy, and kiro-gateway inside isolated, secure, zero-leakage proxy shell blocks. Deploys launchers directly to <code>~/.local/bin/</code> for seamless PATH discovery.<br>
-                            <strong>Action:</strong> Copy wrappers to local path: <code>cp scripts/hermes_wrapper.sh ~/.local/bin/hermes && cp scripts/agy_wrapper.sh ~/.local/bin/agy && chmod +x ~/.local/bin/hermes ~/.local/bin/agy</code>.
+                            <strong>Action:</strong> Copy wrappers to local path and make them executable.<br>
+                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/hermes_wrapper.sh')">🔍 Inspect Hermes</button>
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/agy_wrapper.sh')">🔍 Inspect Antigravity</button>
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/kiro_gateway_wrapper.sh')">🔍 Inspect Gateway</button>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/hermes_wrapper.sh" download>📥 Hermes</a>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/agy_wrapper.sh" download>📥 Antigravity</a>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/kiro_gateway_wrapper.sh" download>📥 Gateway</a>
+                            </div>
                         </p>
                     </div>
 
@@ -744,6 +775,10 @@
                             <strong>Files Used:</strong> <code>scripts/diagnose_opencode.sh</code><br>
                             <strong>Purpose:</strong> The final validation gate. Performs port status analysis, audits system environment parameters, detects Unix domain socket session health, and validates HTTPS direct connection bypass rules for NVIDIA NIM and OpenCode Zen model endpoints.<br>
                             <strong>Action:</strong> Run the diagnostic suite: <code>chmod +x scripts/diagnose_opencode.sh && ./scripts/diagnose_opencode.sh</code>. Alternatively, use the <code>owl-check</code> shell alias.
+                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/diagnose_opencode.sh')">🔍 Inspect Script</button>
+                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/diagnose_opencode.sh" download>📥 Download</a>
+                            </div>
                         </p>
                     </div>
                 </div>
@@ -828,6 +863,38 @@
             }
             document.getElementById(tabId).classList.add("active");
             evt.currentTarget.classList.add("active");
+        }
+
+        // Auto-navigate and view file in catalog
+        function viewCatalogFile(filePath) {
+            // Find the file object in the catalog
+            const file = filesCatalog.find(f => f.path === filePath);
+            if (!file) {
+                console.error("File not found in catalog: " + filePath);
+                return;
+            }
+            
+            // Switch tab to catalog
+            const navBtn = document.querySelector("button[onclick*='tab-catalog']");
+            if (navBtn) {
+                switchTab({ currentTarget: navBtn }, 'tab-catalog');
+            }
+            
+            // Find the sidebar button matching this path
+            const sidebarButtons = document.querySelectorAll(".file-btn");
+            let targetElement = null;
+            sidebarButtons.forEach(btn => {
+                const text = btn.innerText;
+                if (text.includes(filePath.split('/').pop())) {
+                    targetElement = btn;
+                }
+            });
+            
+            // Call selectFile
+            selectFile(file, targetElement);
+            
+            // Smooth scroll to catalog card
+            document.getElementById("tab-catalog").scrollIntoView({ behavior: 'smooth' });
         }
 
         // File database
@@ -1278,6 +1345,207 @@ echo "  Bypassing dead ports and unstable public free proxies."
 echo "  kiro-cli wrapper is now fully configured to use the OWL Proxy."
 echo "============================================="
 echo ""
+`
+    },
+    {
+        path: "scripts/hermes_wrapper.sh",
+        category: "Wrapper",
+        relation: "Launcher wrapper that isolates HTTP_PROXY within standalone Hermes execution context.",
+        download: "https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/hermes_wrapper.sh",
+        code: `#!/bin/bash
+# 🦉 Hermes Agent - Secure Proxy Launcher Wrapper
+set -euo pipefail
+
+# Configuration (Change these to match your Hermes codebase paths)
+HERMES_DIR="/home/x1/Documents/ubuntu-obsidian"
+HERMES_CMD="python3" 
+HERMES_SCRIPT="agent.py" # Replace with your primary Hermes execution script (e.g. main.py, cli.js, etc.)
+
+# Styling
+BOLD='\\033[1m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+CYAN='\\033[0;36m'
+RED='\\033[0;31m'
+NC='\\033[0m'
+
+info()  { echo -e "\${CYAN}➜\${NC} \$1"; }
+ok()    { echo -e "\${GREEN}✓\${NC} \$1"; }
+warn()  { echo -e "\${YELLOW}⚠\${NC} \$1"; }
+err()   { echo -e "\${RED}✗\${NC} \$1"; }
+
+# ── 1. Resolve systemd command based on privilege level ────────────────────
+SYSTEMCTL_CMD="systemctl --user"
+CURL_PING_CMD="curl -sf"
+
+if [[ "\$EUID" -eq 0 ]]; then
+    # If running under sudo/root, query systemd user services as the standard user
+    SYSTEMCTL_CMD="sudo -u x1 systemctl --user"
+fi
+
+# ── 2. Check Background Proxy Dependency ───────────────────────────────────
+if ! \$SYSTEMCTL_CMD is-active --quiet owl-forward-proxy.service; then
+    warn "OWL Forward Proxy service is not active. Attempting to start..."
+    if ! \$SYSTEMCTL_CMD start owl-forward-proxy.service; then
+        err "Failed to start owl-forward-proxy.service! Verify configuration."
+        exit 1
+    fi
+    sleep 1.5
+fi
+
+# ── 3. Verify Proxy Connection Health ──────────────────────────────────────
+if ! \$CURL_PING_CMD http://127.0.0.1:60000/_ping >/dev/null 2>&1; then
+    err "OWL Forward Proxy is running but failed to respond to health ping on port 60000!"
+    err "Please check status: \$SYSTEMCTL_CMD status owl-forward-proxy.service"
+    exit 1
+fi
+
+# ── 3. Enforce Proxy Environment (Isolated) ────────────────────────────────
+info "Enforcing isolated OWL Proxy environment..."
+export HTTP_PROXY="http://127.0.0.1:60000"
+export HTTPS_PROXY="http://127.0.0.1:60000"
+export NO_PROXY="localhost,127.0.0.1,.local,.localdomain,::1"
+
+# ── 5. Verify Upstream Kiro Health (Optional Alert) ───────────────────────
+if ! curl -sf http://127.0.0.1:8333/health >/dev/null 2>&1; then
+    warn "Local Kiro Gateway (port 8333) is unreachable! Some Anthropic model endpoints may fail."
+    warn "Start it with: \$SYSTEMCTL_CMD start kiro-gateway.service"
+fi
+
+# ── 5. Delegate Execution to Hermes Agent ─────────────────────────────────
+info "Delegating execution to Hermes Agent..."
+echo "  Command: \$HERMES_CMD \$HERMES_DIR/\$HERMES_SCRIPT \$*"
+echo ""
+
+# Navigate to target directory to preserve relative file paths in Obsidian
+cd "\$HERMES_DIR"
+
+if [[ -f "\$HERMES_SCRIPT" ]]; then
+    exec "\$HERMES_CMD" "\$HERMES_SCRIPT" "\$@"
+else
+    # Fallback to general execution if no specific script matches
+    warn "Specified script '\$HERMES_SCRIPT' not found in \$HERMES_DIR. Running fallback shell..."
+    echo "  Hint: Edit /home/x1/.local/bin/hermes to specify your exact startup script."
+    echo ""
+    exec bash
+fi
+`
+    },
+    {
+        path: "scripts/agy_wrapper.sh",
+        category: "Wrapper",
+        relation: "Secure proxy launcher wrapper that dynamically unsets local variable scopes before running Antigravity.",
+        download: "https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/agy_wrapper.sh",
+        code: `#!/bin/bash
+# 🦉 Antigravity Agent - Secure Proxy Launcher Wrapper
+set -euo pipefail
+
+# Configuration
+AGY_REAL_PATH="/home/x1/.local/bin/agy.real"
+
+# Styling
+BOLD='\\033[1m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+CYAN='\\033[0;36m'
+RED='\\033[0;31m'
+NC='\\033[0m'
+
+info()  { echo -e "\${CYAN}➜\${NC} \$1"; }
+ok()    { echo -e "\${GREEN}✓\${NC} \$1"; }
+warn()  { echo -e "\${YELLOW}⚠\${NC} \$1"; }
+err()   { echo -e "\${RED}✗\${NC} \$1"; }
+
+# ── 1. Resolve systemd command based on privilege level ────────────────────
+SYSTEMCTL_CMD="systemctl --user"
+CURL_PING_CMD="curl -sf"
+
+if [[ "\$EUID" -eq 0 ]]; then
+    # If running under sudo/root, query systemd user services as the standard user
+    SYSTEMCTL_CMD="sudo -u x1 systemctl --user"
+fi
+
+# ── 2. Check Background Proxy Dependency ───────────────────────────────────
+if ! \$SYSTEMCTL_CMD is-active --quiet owl-forward-proxy.service; then
+    warn "OWL Forward Proxy service is not active. Attempting to start..."
+    if ! \$SYSTEMCTL_CMD start owl-forward-proxy.service; then
+        err "Failed to start owl-forward-proxy.service! Verify configuration."
+        exit 1
+    fi
+    sleep 1.5
+fi
+
+# ── 3. Verify Proxy Connection Health ──────────────────────────────────────
+if ! \$CURL_PING_CMD http://127.0.0.1:60000/_ping >/dev/null 2>&1; then
+    err "OWL Forward Proxy is running but failed to respond to health ping on port 60000!"
+    err "Please check status: \$SYSTEMCTL_CMD status owl-forward-proxy.service"
+    exit 1
+fi
+
+# ── 4. Enforce Proxy Environment (Isolated) ────────────────────────────────
+info "Enforcing isolated OWL Proxy environment for Antigravity..."
+export HTTP_PROXY="http://127.0.0.1:60000"
+export HTTPS_PROXY="http://127.0.0.1:60000"
+export NO_PROXY="localhost,127.0.0.1,.local,.localdomain,::1"
+
+# ── 5. Verify Upstream Kiro Health (Optional Alert) ───────────────────────
+if ! curl -sf http://127.0.0.1:8333/health >/dev/null 2>&1; then
+    warn "Local Kiro Gateway (port 8333) is unreachable! Some model translation endpoints may fail."
+    warn "Start it with: \$SYSTEMCTL_CMD start kiro-gateway.service"
+fi
+
+# ── 6. Delegate Execution to Antigravity CLI ──────────────────────────────
+info "Delegating execution to Antigravity Real Binary..."
+
+if [[ -f "\$AGY_REAL_PATH" ]]; then
+    exec "\$AGY_REAL_PATH" "\$@"
+else
+    err "Real Antigravity binary not found at \$AGY_REAL_PATH!"
+    err "Please ensure you have renamed the original 'agy' binary to 'agy.real'."
+    exit 1
+fi
+`
+    },
+    {
+        path: "scripts/kiro_gateway_wrapper.sh",
+        category: "Wrapper",
+        relation: "Wrapper script for launching the Kiro Terminal under custom environments.",
+        download: "https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/kiro_gateway_wrapper.sh",
+        code: `#!/bin/bash
+# 🦉 Kiro Gateway - Terminal Launcher & Controller
+set -euo pipefail
+
+GATEWAY_DIR="/home/x1/Documents/proxy/kiro-gateway"
+VENV_PYTHON="\$GATEWAY_DIR/.venv/bin/python"
+MAIN_PY="\$GATEWAY_DIR/main.py"
+DEFAULT_PORT=8333
+
+# Check if target main.py exists
+if [[ ! -f "\$MAIN_PY" ]]; then
+    echo "Error: Kiro Gateway main.py not found at \$MAIN_PY" >&2
+    exit 1
+fi
+
+# Function to check if background service is active
+check_service() {
+    if systemctl --user is-active --quiet kiro-gateway.service; then
+        echo "⚠️  Kiro Gateway is currently running in the background as a systemd service." >&2
+        echo "   To run it in the foreground, stop the background service first:" >&2
+        echo "   \$ systemctl --user stop kiro-gateway.service" >&2
+        echo "" >&2
+        echo "   Showing current background logs (Ctrl+C to exit):" >&2
+        exec journalctl --user -u kiro-gateway.service -f -n 20
+    fi
+}
+
+# If no arguments are passed, do a quick service check
+if [[ \$# -eq 0 ]]; then
+    check_service
+fi
+
+# Run the python gateway main script
+echo "➜ Launching Kiro Gateway manually..."
+exec "\$VENV_PYTHON" "\$MAIN_PY" "\$@"
 `
     },
     {
@@ -4163,6 +4431,60 @@ If you see the error:
 > When updating the proxy or installing extensions using scripts like \`install_owl_agent.sh\`:
 > 1. **Do not overwrite \`forward_proxy.py\`** without preserving the direct-connection bypass rules for \`*.nvidia.com\` and \`*.opencode.ai\`. Overwriting this file breaks model loading.
 > 2. **Maintain a minimal \`NO_PROXY\` block** (\`localhost,127.0.0.1,.local,.localdomain,::1\`) in \`~/.bashrc\` to ensure other systems don't leak external AI domain calls. Use proxy-level domain-bypassing instead.
+`
+    },
+    {
+        path: "systemd/kiro-gateway.service",
+        category: "Systemd Service",
+        relation: "Systemd user service config for managing the Kiro API Translation Gateway service process.",
+        download: "https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/systemd/kiro-gateway.service",
+        code: `[Unit]
+Description=Kiro Gateway - AI Proxy for Amazon Q Developer
+After=network.target
+BindsTo=kiro-tokend.service
+After=kiro-tokend.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/x1/Documents/proxy/kiro-gateway
+Environment=PROXY_API_KEY=kiro-gateway-8333
+Environment=KIRO_CLI_DB_FILE=~/.local/share/kiro-cli/data.sqlite3
+ExecStart=/home/x1/Documents/proxy/kiro-gateway/.venv/bin/python main.py --port 8333
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+`
+    },
+    {
+        path: "systemd/owl-forward-proxy.service",
+        category: "Systemd Service",
+        relation: "Systemd user service config for running and monitoring the core OWL forward proxy stack.",
+        download: "https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/systemd/owl-forward-proxy.service",
+        code: `[Unit]
+Description=🦉 OWL-AGENT Forward Proxy — OpenCode HTTP_PROXY defense stack
+Documentation=https://github.com/owl-agent/forward-proxy
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/x1/.owl-agent/venv/bin/python /home/x1/.owl-agent/forward_proxy.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=append:/home/x1/.owl-agent/logs/forward-proxy.log
+StandardError=append:/home/x1/.owl-agent/logs/forward-proxy.log
+# Upstream proxy for geo-routing (mihomo/9router)
+Environment=UPSTREAM_PROXY=http://127.0.0.1:7890
+
+Environment=OWL_PROXY_HOST=127.0.0.1
+Environment=OWL_PROXY_PORT=60000
+Environment=OWL_CONNECT_TIMEOUT=15
+Environment=OWL_MAX_BODY_BYTES=10485760
+Environment=OWL_LOG_LEVEL=INFO
+
+[Install]
+WantedBy=default.target
 `
     }
 ];
