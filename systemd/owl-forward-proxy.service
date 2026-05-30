@@ -1,0 +1,23 @@
+[Unit]
+Description=🦉 OWL-AGENT Forward Proxy — OpenCode HTTP_PROXY defense stack
+Documentation=https://github.com/owl-agent/forward-proxy
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/x1/.owl-agent/venv/bin/python /home/x1/.owl-agent/forward_proxy.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=append:/home/x1/.owl-agent/logs/forward-proxy.log
+StandardError=append:/home/x1/.owl-agent/logs/forward-proxy.log
+# Upstream proxy for geo-routing (mihomo/9router)
+Environment=UPSTREAM_PROXY=http://127.0.0.1:7890
+
+Environment=OWL_PROXY_HOST=127.0.0.1
+Environment=OWL_PROXY_PORT=60000
+Environment=OWL_CONNECT_TIMEOUT=15
+Environment=OWL_MAX_BODY_BYTES=10485760
+Environment=OWL_LOG_LEVEL=INFO
+
+[Install]
+WantedBy=default.target

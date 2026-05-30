@@ -1,0 +1,17 @@
+[Unit]
+Description=Kiro Gateway - AI Proxy for Amazon Q Developer
+After=network.target
+BindsTo=kiro-tokend.service
+After=kiro-tokend.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/x1/Documents/proxy/kiro-gateway
+Environment=PROXY_API_KEY=kiro-gateway-8333
+Environment=KIRO_CLI_DB_FILE=~/.local/share/kiro-cli/data.sqlite3
+ExecStart=/home/x1/Documents/proxy/kiro-gateway/.venv/bin/python main.py --port 8333
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
