@@ -551,48 +551,90 @@
                 <p>The suite uses a dynamic double-proxy intercept configuration to circumvent regional constraints. Local command launchers isolate proxy settings within their active lifecycle, forwarding traffic through OWL Proxy (60000) directly to local upstream Clash routing modules (7890).</p>
                 
                 <div class="arch-svg-container">
-                    <svg width="800" height="420" viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
+                <div class="arch-svg-container">
+                    <svg width="950" height="480" viewBox="0 0 950 480" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#66fcf1" />
                             </marker>
                         </defs>
-                        <rect x="50" y="50" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="140" y="85" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">Hermes Agent</text>
-                        <text x="140" y="100" fill="#66fcf1" font-size="11" text-anchor="middle" font-family="Space Mono">Standalone CLI</text>
+                        
+                        <!-- Row 1: Provisioning & Verification -->
+                        <!-- 1. Installer Engine -->
+                        <rect x="280" y="30" width="180" height="60" rx="8" class="flow-node" />
+                        <text x="370" y="60" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">install_owl_agent.sh</text>
+                        <text x="370" y="75" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">Workstation Installer</text>
 
-                        <rect x="50" y="270" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="140" y="305" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">OpenCode Editor</text>
-                        <text x="140" y="320" fill="#66fcf1" font-size="11" text-anchor="middle" font-family="Space Mono">mcp-servers catalog</text>
+                        <!-- 2. Test Harness -->
+                        <rect x="510" y="30" width="180" height="60" rx="8" class="flow-node" />
+                        <text x="600" y="60" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">test_parallel_research.py</text>
+                        <text x="600" y="75" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">Concurrency Harness</text>
 
-                        <rect x="330" y="270" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="420" y="305" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">Kiro Gateway (8333)</text>
-                        <text x="420" y="320" fill="#45f3ff" font-size="11" text-anchor="middle" font-family="Space Mono">API Translation</text>
+                        <!-- Row 2: Client Intakes -->
+                        <!-- 3. Hermes Standalone Agent -->
+                        <rect x="50" y="170" width="180" height="60" rx="8" class="flow-node" />
+                        <text x="140" y="200" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">Hermes Agent Wrapper</text>
+                        <text x="140" y="215" fill="#66fcf1" font-size="10" text-anchor="middle" font-family="Space Mono">Isolated Shell (60000)</text>
 
-                        <rect x="330" y="50" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="420" y="85" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">OWL Forward Proxy (60000)</text>
-                        <text x="420" y="100" fill="#45f3ff" font-size="11" text-anchor="middle" font-family="Space Mono">Port Interceptor</text>
+                        <!-- Row 3: Central Processing Proxy -->
+                        <!-- 4. OWL Forwarding Proxy -->
+                        <rect x="340" y="170" width="200" height="60" rx="8" class="flow-node" />
+                        <text x="440" y="200" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">OWL Proxy (Port 60000)</text>
+                        <text x="440" y="215" fill="#66fcf1" font-size="10" text-anchor="middle" font-family="Space Mono">Defense Interceptor</text>
 
-                        <rect x="600" y="160" width="150" height="60" rx="8" class="flow-node" />
-                        <text x="675" y="195" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">Clash Core (7890)</text>
-                        <text x="675" y="210" fill="#39e3a6" font-size="11" text-anchor="middle" font-family="Space Mono">Mihomo Geo-Router</text>
+                        <!-- Row 4: Downstream Routing -->
+                        <!-- 5. Clash Router Core -->
+                        <rect x="710" y="170" width="180" height="60" rx="8" class="flow-node" />
+                        <text x="800" y="200" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">Clash Core (Port 7890)</text>
+                        <text x="800" y="215" fill="#39e3a6" font-size="10" text-anchor="middle" font-family="Space Mono">Mihomo Routing Engine</text>
 
-                        <!-- Links -->
-                        <path d="M 230 80 L 320 80" class="flow-link-active" marker-end="url(#arrow)" />
-                        <text x="275" y="70" fill="#c5c6c7" font-size="10" text-anchor="middle" font-family="Space Mono">HTTP_PROXY</text>
+                        <!-- Row 5: IDE Ecosystem -->
+                        <!-- 6. OpenCode Editor -->
+                        <rect x="50" y="350" width="180" height="60" rx="8" class="flow-node" />
+                        <text x="140" y="380" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">OpenCode Workspace</text>
+                        <text x="140" y="395" fill="#66fcf1" font-size="10" text-anchor="middle" font-family="Space Mono">IDE Settings Map</text>
 
-                        <path d="M 230 300 L 320 300" class="flow-link-active" marker-end="url(#arrow)" />
-                        <text x="275" y="290" fill="#c5c6c7" font-size="10" text-anchor="middle" font-family="Space Mono">Local MCP API</text>
+                        <!-- 7. Resilient MCP Server -->
+                        <rect x="280" y="350" width="180" height="60" rx="8" class="flow-node" />
+                        <text x="370" y="380" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">owl_resilient_mcp.py</text>
+                        <text x="370" y="395" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">Obsidian Search API</text>
 
-                        <path d="M 420 270 L 420 120" class="flow-link-active" marker-end="url(#arrow)" />
-                        <text x="430" y="180" fill="#c5c6c7" font-size="10" text-anchor="left" font-family="Space Mono">Enforced Proxy</text>
+                        <!-- 8. Kiro Translation Gateway -->
+                        <rect x="510" y="350" width="180" height="60" rx="8" class="flow-node" />
+                        <text x="600" y="380" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">Kiro Gateway (Port 8333)</text>
+                        <text x="600" y="395" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">AWS SSO OIDC Engine</text>
 
-                        <path d="M 510 80 L 675 80 L 675 150" class="flow-link-active" marker-end="url(#arrow)" />
-                        <text x="590" y="70" fill="#c5c6c7" font-size="10" text-anchor="middle" font-family="Space Mono">UPSTREAM_PROXY</text>
+                        <!-- Architectural Routing Paths (Arrows) -->
+                        <!-- Installer -> provisions OWL / Kiro -->
+                        <path d="M 370 90 L 370 160" class="flow-link" marker-end="url(#arrow)" />
+                        <path d="M 370 90 L 600 340" class="flow-link" marker-end="url(#arrow)" />
 
-                        <path d="M 750 190 L 780 190" class="flow-link" marker-end="url(#arrow)" />
-                        <text x="765" y="180" fill="#39e3a6" font-size="10" text-anchor="middle" font-family="Space Mono">WAN</text>
+                        <!-- Concurrency test -> monitors OWL proxy -->
+                        <path d="M 600 90 L 490 160" class="flow-link" marker-end="url(#arrow)" />
+
+                        <!-- Hermes Agent Wrapper -> OWL Proxy -->
+                        <path d="M 230 200 L 330 200" class="flow-link-active" marker-end="url(#arrow)" />
+                        <text x="280" y="190" fill="#c5c6c7" font-size="9" text-anchor="middle" font-family="Space Mono">local-env</text>
+
+                        <!-- OpenCode -> Resilient MCP -->
+                        <path d="M 230 380 L 270 380" class="flow-link-active" marker-end="url(#arrow)" />
+                        
+                        <!-- Resilient MCP -> Kiro Gateway -->
+                        <path d="M 460 380 L 500 380" class="flow-link-active" marker-end="url(#arrow)" />
+
+                        <!-- Kiro Gateway -> OWL Proxy -->
+                        <path d="M 600 350 L 440 240" class="flow-link-active" marker-end="url(#arrow)" />
+                        <text x="540" y="290" fill="#c5c6c7" font-size="9" text-anchor="middle" font-family="Space Mono">OIDC Auth Tunnel</text>
+
+                        <!-- OWL Proxy -> Clash Router -->
+                        <path d="M 540 200 L 700 200" class="flow-link-active" marker-end="url(#arrow)" />
+                        <text x="625" y="190" fill="#c5c6c7" font-size="9" text-anchor="middle" font-family="Space Mono">UPSTREAM_PROXY</text>
+
+                        <!-- Clash Router -> Outside World -->
+                        <path d="M 890 200 L 930 200" class="flow-link" marker-end="url(#arrow)" />
+                        <text x="910" y="190" fill="#39e3a6" font-size="9" text-anchor="middle" font-family="Space Mono">WAN</text>
                     </svg>
+                </div>
                 </div>
             </div>
         </div>
