@@ -119,4 +119,15 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 
 ---
 
+## 🛠️ 5. Recent Ecosystem Updates & Schema Patching
+
+### May 30, 2026: OpenCode Stack Recovery & Schema Alignment
+* **The Launch Issue**: The `opencode` environment tmux session was crashing immediately with exit code `[exited]` upon launching. Raw binary checks revealed a configuration schema failure: `[cause]: SchemaError: Missing key at ["command"]["heavy"]["template"]` and `["command"]["light"]["template"]`.
+* **The Resolution**: Updated the main OpenCode config `~/.config/opencode/opencode.jsonc` to explicitly define `"template"` keys alongside the existing `"prompt"` fields. This completely cures the validator parse engine and restores pristine launcher functionality.
+* **Redundancy Pruning**: Moved redundant legacy installers (e.g. `scripts/install.sh`, `scripts/owl_agent_installer_v4.sh`) from `/home/x1` and nested workspace paths into `/home/x1/Documents/proxy_backups/` to eliminate script conflicts.
+* **Resilient MCP Bridging**: Fully configured the `owl-resilient-http` MCP server into OpenCode settings to ensure high-uptime failover translation of semantic searches.
+* **Ecosystem Integrity**: Integrated advanced user-level systemd process verification inside `validate_ecosystem.sh` to resolve process tracking false-positives under UID mapping limits.
+
+---
+
 *Maintained under GitHub pages for marktantongco.*
