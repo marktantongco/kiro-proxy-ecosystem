@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🦉 Kiro / OWL / Hermes / Clash Proxy Ecosystem Replication Suite</title>
+    <title>🦉 Kiro / OWL / Hermes Proxy Stack Replication Suite</title>
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,7 +58,7 @@
             background: var(--color-primary);
         }
 
-        /* Sleek Glassmorphism Header */
+        /* Glassmorphism Header */
         header {
             position: sticky;
             top: 0;
@@ -93,7 +93,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Banner & Glowing Badge */
         .badge {
             background: rgba(102, 252, 241, 0.1);
             border: 1px solid var(--color-primary);
@@ -107,18 +106,17 @@
             box-shadow: 0 0 10px rgba(102, 252, 241, 0.2);
         }
 
-        /* Main Container */
+        /* Container */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 3rem 2rem;
         }
 
-        /* Hero / Introduction */
+        /* Hero */
         .hero {
             text-align: center;
             margin-bottom: 4rem;
-            position: relative;
         }
 
         .hero-title {
@@ -132,18 +130,17 @@
 
         .hero-title span {
             color: var(--color-primary);
-            position: relative;
         }
 
         .hero-subtitle {
             font-size: 1.25rem;
             font-weight: 300;
-            max-width: 750px;
+            max-width: 800px;
             margin: 0 auto;
             color: var(--color-text-main);
         }
 
-        /* Tab Navigation - Elegant Bento grid style */
+        /* Navigation Tabs */
         .tab-nav {
             display: flex;
             justify-content: center;
@@ -160,28 +157,22 @@
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all var(--transition-speed);
             font-family: var(--font-display);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
         .tab-btn:hover {
             border-color: var(--color-primary);
             color: var(--color-text-light);
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(102, 252, 241, 0.1);
         }
 
         .tab-btn.active {
             background: linear-gradient(135deg, rgba(102, 252, 241, 0.15) 0%, rgba(69, 243, 255, 0.05) 100%);
             border-color: var(--color-primary);
             color: var(--color-primary);
-            box-shadow: inset 0 0 10px rgba(102, 252, 241, 0.1);
         }
 
-        /* Tab Contents */
         .tab-content {
             display: none;
             animation: fadeIn 0.4s ease-in-out forwards;
@@ -191,7 +182,7 @@
             display: block;
         }
 
-        /* Visual Card Grid */
+        /* Card System */
         .card {
             background: var(--bg-card);
             border-radius: 16px;
@@ -199,26 +190,20 @@
             padding: 2.5rem;
             margin-bottom: 2rem;
             position: relative;
-            transition: all var(--transition-speed);
-        }
-
-        .card:hover {
-            border-color: rgba(102, 252, 241, 0.2);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .card-title {
             font-size: 1.8rem;
             color: var(--color-text-light);
             margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
             border-left: 4px solid var(--color-primary);
             padding-left: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        /* Architecture Flowchart SVG Styling */
+        /* Architecture Flowchart SVG */
         .arch-svg-container {
             width: 100%;
             overflow-x: auto;
@@ -255,118 +240,141 @@
             animation: dash 4s linear infinite;
         }
 
-        /* Copyable Code Section Styling */
-        .code-explorer {
+        /* File Explorer & Catalog Grid */
+        .catalog-grid {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
         }
 
-        @media (max-width: 900px) {
-            .code-explorer {
+        @media (max-width: 768px) {
+            .catalog-grid {
                 grid-template-columns: 1fr;
             }
         }
 
-        .file-list {
+        .file-item {
+            background: var(--bg-deep);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all var(--transition-speed);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .file-item:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 4px 20px rgba(102, 252, 241, 0.1);
+        }
+
+        .file-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .file-path {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--color-primary);
+            word-break: break-all;
+        }
+
+        .file-category {
+            background: rgba(255,255,255,0.05);
+            color: var(--color-text-main);
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .file-relation {
+            font-size: 0.9rem;
+            color: var(--color-text-main);
+            margin-bottom: 1.5rem;
+            min-height: 50px;
+        }
+
+        .file-actions {
+            display: flex;
             gap: 0.75rem;
         }
 
-        .file-btn {
-            background: var(--bg-deep);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 1rem;
-            border-radius: 8px;
+        .btn-action {
+            flex-grow: 1;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
             cursor: pointer;
-            text-align: left;
+            text-align: center;
             transition: all var(--transition-speed);
-            color: var(--color-text-main);
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            text-decoration: none;
+            font-family: var(--font-display);
         }
 
-        .file-btn:hover, .file-btn.active {
-            border-color: var(--color-primary);
-            color: var(--color-text-light);
+        .btn-action-primary {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: var(--bg-deep);
+            border: none;
+        }
+
+        .btn-action-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-action-secondary {
+            background: transparent;
+            border: 1px solid rgba(102, 252, 241, 0.4);
+            color: var(--color-primary);
+        }
+
+        .btn-action-secondary:hover {
             background: rgba(102, 252, 241, 0.05);
         }
 
-        .file-btn .badge-file {
-            font-size: 0.7rem;
-            background: rgba(255,255,255,0.1);
-            color: var(--color-text-main);
-            padding: 0.15rem 0.4rem;
-            border-radius: 4px;
-        }
-
-        .file-btn.active .badge-file {
-            background: var(--color-primary);
-            color: var(--bg-deep);
-        }
-
-        .code-view-container {
+        /* Replication Wizard */
+        .step-timeline {
             position: relative;
-            background: #0d0e12;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 600px;
+            padding-left: 2.5rem;
+            border-left: 2px solid rgba(102, 252, 241, 0.2);
+            margin: 2rem 0;
         }
 
-        .code-header {
-            background: #14161d;
-            padding: 0.75rem 1.5rem;
+        .step-item {
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .step-number {
+            position: absolute;
+            left: calc(-2.5rem - 16px - 1px);
+            width: 32px;
+            height: 32px;
+            background: var(--bg-deep);
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary);
+            border-radius: 50%;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
         }
 
-        .code-filename {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            color: var(--color-primary);
+        .step-title {
+            font-size: 1.3rem;
+            color: var(--color-text-light);
+            margin-bottom: 0.5rem;
         }
 
-        .copy-btn {
-            background: rgba(102, 252, 241, 0.1);
-            border: 1px solid rgba(102, 252, 241, 0.3);
-            color: var(--color-primary);
-            padding: 0.35rem 0.85rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
-            transition: all var(--transition-speed);
-        }
-
-        .copy-btn:hover {
-            background: var(--color-primary);
-            color: var(--bg-deep);
-        }
-
-        .code-content {
-            flex-grow: 1;
-            padding: 1.5rem;
-            overflow: auto;
-            margin: 0;
-            color: #d1d5db;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            white-space: pre-wrap;
-            background: #0f1015;
-            line-height: 1.5;
-        }
-
-        /* Terminal Simulator Styling */
+        /* Terminal Simulator */
         .terminal-box {
             background: #060709;
             border-radius: 12px;
@@ -413,16 +421,6 @@
             line-height: 1.6;
         }
 
-        .terminal-line {
-            margin-bottom: 0.4rem;
-            opacity: 0;
-            animation: typingLine 0.3s forwards ease-out;
-        }
-
-        .terminal-prompt {
-            color: var(--color-primary);
-        }
-
         .btn-run-sim {
             background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
             color: var(--bg-deep);
@@ -434,122 +432,14 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(102, 252, 241, 0.3);
             transition: all var(--transition-speed);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: var(--font-display);
+            margin-bottom: 1rem;
         }
 
         .btn-run-sim:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 252, 241, 0.4);
         }
 
-        /* Step by Step Replication Wizard */
-        .step-timeline {
-            position: relative;
-            padding-left: 2.5rem;
-            border-left: 2px solid rgba(102, 252, 241, 0.2);
-            margin: 2rem 0;
-        }
-
-        .step-item {
-            position: relative;
-            margin-bottom: 3.5rem;
-        }
-
-        .step-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .step-number {
-            position: absolute;
-            left: calc(-2.5rem - 16px - 1px);
-            width: 32px;
-            height: 32px;
-            background: var(--bg-deep);
-            border: 2px solid var(--color-primary);
-            color: var(--color-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-            box-shadow: 0 0 10px rgba(102, 252, 241, 0.2);
-        }
-
-        .step-title {
-            font-size: 1.4rem;
-            color: var(--color-text-light);
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .step-desc {
-            color: var(--color-text-main);
-            margin-bottom: 1rem;
-        }
-
-        /* Expandable Accordions for FAQ */
-        .accordion {
-            border: 1px solid rgba(255,255,255,0.05);
-            background: var(--bg-card);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            overflow: hidden;
-            transition: all var(--transition-speed);
-        }
-
-        .accordion-header {
-            padding: 1.25rem 1.5rem;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--color-text-light);
-            transition: all var(--transition-speed);
-        }
-
-        .accordion-header:hover {
-            background: rgba(102, 252, 241, 0.05);
-        }
-
-        .accordion-arrow {
-            font-size: 0.8rem;
-            transition: transform var(--transition-speed);
-        }
-
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            background: rgba(11, 12, 16, 0.3);
-        }
-
-        .accordion-body {
-            padding: 1.5rem;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            color: var(--color-text-main);
-        }
-
-        .accordion.open .accordion-content {
-            max-height: 500px;
-        }
-
-        .accordion.open .accordion-arrow {
-            transform: rotate(180deg);
-        }
-
-        .accordion.open {
-            border-color: var(--color-primary);
-        }
-
-        /* Success Copy Alert Popup */
+        /* Success Copy Popup */
         .alert-popup {
             position: fixed;
             bottom: 2rem;
@@ -563,7 +453,6 @@
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
             z-index: 1000;
         }
 
@@ -572,7 +461,66 @@
             transform: translateY(0);
         }
 
-        /* Footer */
+        /* Code display modal */
+        .code-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .code-modal-content {
+            background: var(--bg-deep);
+            border: 1px solid var(--color-primary);
+            border-radius: 16px;
+            width: 80%;
+            max-width: 900px;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .code-modal-header {
+            background: var(--bg-card);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .code-modal-close {
+            color: var(--color-text-main);
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .code-modal-close:hover {
+            color: var(--color-accent-red);
+        }
+
+        .code-modal-body {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow: auto;
+            background: #0d0e12;
+            color: #d1d5db;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            margin: 0;
+        }
+
         footer {
             border-top: 1px solid rgba(255,255,255,0.05);
             padding: 3rem 2rem;
@@ -581,7 +529,6 @@
             color: #666;
         }
 
-        /* Dynamic Animations */
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-6px); }
@@ -590,10 +537,6 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes typingLine {
-            to { opacity: 1; }
         }
 
         @keyframes dash {
@@ -605,7 +548,7 @@
 </head>
 <body>
 
-    <!-- Sleek Header -->
+    <!-- Header -->
     <header>
         <div class="logo-container">
             <span class="logo-icon">🦉</span>
@@ -615,81 +558,67 @@
     </header>
 
     <div class="container">
-        <!-- Hero Introduction -->
+        <!-- Hero Section -->
         <section class="hero">
             <h1 class="hero-title">Proxy Ecosystem <span>Replication Suite</span></h1>
-            <p class="hero-subtitle">The architectural model, deployment manual, and diagnostic validation stack needed to recreate our secure AI wrapper and proxy environment on any Linux workstation.</p>
+            <p class="hero-subtitle">The complete file catalog, deployment manual, and diagnostic validation stack needed to recreate our secure AI wrapper and proxy environment on any workstation.</p>
         </section>
 
-        <!-- Dynamic Navigation -->
+        <!-- Navigation Tabs -->
         <nav class="tab-nav">
-            <button class="tab-btn active" onclick="switchTab(event, 'tab-architecture')">📐 Architecture</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-wizard')">🛠️ Replication Steps</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-code')">💻 Code Repository</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-diagnostics')">🩺 Self-Healing Diagnostics</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-faq')">❓ FAQ & Triage</button>
+            <button class="tab-btn active" onclick="switchTab(event, 'tab-architecture')">📐 Architecture Map</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-catalog')">📁 Downloads & Catalog</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-wizard')">🛠️ Step-by-Step Wizards</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-diagnostics')">🩺 Diagnostics Terminal</button>
         </nav>
 
-        <!-- TAB 1: Architecture -->
+        <!-- TAB 1: Architecture Map -->
         <div id="tab-architecture" class="tab-content active">
             <div class="card">
-                <h2 class="card-title">🦉 System Data-Flow & Network Defense Mapping</h2>
-                <p>This ecosystem abstracts local and regional network blocks transparently. Local wrappers intercept process execution, enforce standard proxies locally, and redirect traffic dynamically through an encrypted double-proxy structure back to stable outside hosts.</p>
+                <h2 class="card-title">📐 Secure Ecosystem Network Pipeline</h2>
+                <p>The suite uses a dynamic double-proxy intercept configuration to circumvent regional constraints. Local command launchers isolate proxy settings within their active lifecycle, forwarding traffic through OWL Proxy (60000) directly to local upstream Clash routing modules (7890).</p>
                 
-                <!-- Animated SVG Diagram -->
                 <div class="arch-svg-container">
                     <svg width="800" height="420" viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Definitions for arrows -->
                         <defs>
                             <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#66fcf1" />
                             </marker>
                         </defs>
-
                         <!-- Nodes Group -->
-                        <!-- 1. Hermes -->
                         <rect x="50" y="50" width="180" height="60" rx="8" class="flow-node" />
                         <text x="140" y="85" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">Hermes Agent</text>
                         <text x="140" y="100" fill="#66fcf1" font-size="11" text-anchor="middle" font-family="Space Mono">Standalone CLI</text>
 
-                        <!-- 2. OpenCode -->
                         <rect x="50" y="270" width="180" height="60" rx="8" class="flow-node" />
                         <text x="140" y="305" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">OpenCode Editor</text>
                         <text x="140" y="320" fill="#66fcf1" font-size="11" text-anchor="middle" font-family="Space Mono">mcp-servers catalog</text>
 
-                        <!-- 3. Kiro Gateway -->
                         <rect x="330" y="270" width="180" height="60" rx="8" class="flow-node" />
                         <text x="420" y="305" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">Kiro Gateway (8333)</text>
-                        <text x="420" y="320" fill="#45f3ff" font-size="11" text-anchor="middle" font-family="Space Mono">API Translation Venu</text>
+                        <text x="420" y="320" fill="#45f3ff" font-size="11" text-anchor="middle" font-family="Space Mono">API Translation</text>
 
-                        <!-- 4. OWL Proxy -->
                         <rect x="330" y="50" width="180" height="60" rx="8" class="flow-node" />
                         <text x="420" y="85" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">OWL Forward Proxy (60000)</text>
                         <text x="420" y="100" fill="#45f3ff" font-size="11" text-anchor="middle" font-family="Space Mono">Port Interceptor</text>
 
-                        <!-- 5. Clash -->
                         <rect x="600" y="160" width="150" height="60" rx="8" class="flow-node" />
                         <text x="675" y="195" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">Clash Core (7890)</text>
                         <text x="675" y="210" fill="#39e3a6" font-size="11" text-anchor="middle" font-family="Space Mono">Mihomo Geo-Router</text>
 
-                        <!-- Links / Connections -->
-                        <!-- Hermes -> OWL Proxy -->
+                        <!-- Links -->
                         <path d="M 230 80 L 320 80" class="flow-link-active" marker-end="url(#arrow)" />
                         <text x="275" y="70" fill="#c5c6c7" font-size="10" text-anchor="middle" font-family="Space Mono">HTTP_PROXY</text>
 
-                        <!-- OpenCode -> Kiro -->
                         <path d="M 230 300 L 320 300" class="flow-link-active" marker-end="url(#arrow)" />
                         <text x="275" y="290" fill="#c5c6c7" font-size="10" text-anchor="middle" font-family="Space Mono">Local MCP API</text>
 
-                        <!-- Kiro -> OWL Proxy -->
                         <path d="M 420 270 L 420 120" class="flow-link-active" marker-end="url(#arrow)" />
                         <text x="430" y="180" fill="#c5c6c7" font-size="10" text-anchor="left" font-family="Space Mono">Enforced Proxy</text>
 
-                        <!-- OWL Proxy -> Clash -->
                         <path d="M 510 80 L 675 80 L 675 150" class="flow-link-active" marker-end="url(#arrow)" />
                         <text x="590" y="70" fill="#c5c6c7" font-size="10" text-anchor="middle" font-family="Space Mono">UPSTREAM_PROXY</text>
 
-                        <!-- Clash -> Outside -->
                         <path d="M 750 190 L 780 190" class="flow-link" marker-end="url(#arrow)" />
                         <text x="765" y="180" fill="#39e3a6" font-size="10" text-anchor="middle" font-family="Space Mono">WAN</text>
                     </svg>
@@ -697,92 +626,56 @@
             </div>
         </div>
 
-        <!-- TAB 2: Replication Steps -->
+        <!-- TAB 2: Downloads & Catalog -->
+        <div id="tab-catalog" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">📁 Downloadable Ecosystem Files & Catalog</h2>
+                <p style="margin-bottom: 2rem;">Every file is structured and readily configured. Use the direct link actions to either download the files to your station or inspect their implementation details in the viewer modal.</p>
+                
+                <div class="catalog-grid" id="catalog-container">
+                    <!-- Dynamic File Items loaded via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Step-by-Step Wizards -->
         <div id="tab-wizard" class="tab-content">
             <div class="card">
-                <h2 class="card-title">🛠️ Workflow Sequence for Total Workstation Replication</h2>
-                <p class="step-desc">Follow this chronological path to replicate the ecosystem on any clean Debian/Ubuntu workstation.</p>
+                <h2 class="card-title">🛠️ Logical Workflow Sequence for Replication</h2>
                 
                 <div class="step-timeline">
                     <div class="step-item">
                         <div class="step-number">1</div>
-                        <h3 class="step-title">Deploy Clash Core for Geo-Routing Defense</h3>
-                        <p class="step-desc">Install <code>mihomo</code> or another Clash-compatible client on the machine. Bind the local proxy ports to <code>7890</code>. Verify local traffic routes perfectly by running a proxy test curl command.</p>
+                        <h3 class="step-title">Configure Clash Core Upstream</h3>
+                        <p class="step-desc">Establish and run <code>mihomo</code> or Clash-based services bound locally to **port 7890**. This processes secure, geo-routed communication tunnels.</p>
                     </div>
 
                     <div class="step-item">
                         <div class="step-number">2</div>
-                        <h3 class="step-title">Run the Kiro & OWL Installation Base Script</h3>
-                        <p class="step-desc">Deploy the system installers. Use <code>scripts/install.sh</code> and <code>scripts/owl_agent_installer_v4.sh</code> to configure proxy assets, register systemd user units, and compile runtime code paths safely.</p>
+                        <h3 class="step-title">Deploy Unified Agent Installers</h3>
+                        <p class="step-desc">Run the newly added installers: <code>install_kiro_owl_agent.sh</code> or <code>owl_agent_installer.sh</code>. These scripts download, verify, and automatically compile Python libraries, OIDC token engines, and service managers.</p>
                     </div>
 
                     <div class="step-item">
                         <div class="step-number">3</div>
-                        <h3 class="step-title">Establish Local Terminal Wrappers</h3>
-                        <p class="step-desc">Link launcher binaries to local paths. Put the custom <code>hermes</code> wrapper script inside <code>~/.local/bin/hermes</code> and give it execute access (<code>chmod +x</code>) to auto-delegate background services natively.</p>
+                        <h3 class="step-title">Configure systemd Service Units</h3>
+                        <p class="step-desc">Deploy the <code>kiro-gateway.service</code> and <code>owl-forward-proxy.service</code> unit mappings to <code>~/.config/systemd/user/</code> and start the services to secure background processes.</p>
                     </div>
 
                     <div class="step-item">
                         <div class="step-number">4</div>
-                        <h3 class="step-title">Verify Systemd Alignment and Run Diagnostics</h3>
-                        <p class="step-desc">Run the self-healing command: <code>./scripts/validate_ecosystem.sh</code>. It will resolve any missing directory variables, kill duplicate port bindings, and secure the end-to-end active ping check.</p>
+                        <h3 class="step-title">Execute Environment Self-Healing</h3>
+                        <p class="step-desc">Run <code>./scripts/validate_ecosystem.sh</code> to triage environment conflicts, terminate duplicate processes, and secure pings through your newly duplicated stack.</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: Code Repository -->
-        <div id="tab-code" class="tab-content">
-            <div class="card">
-                <h2 class="card-title">💻 Ecosystem Source Files Directory</h2>
-                <p>Browse, select, and copy any file directly from the replication tree below. All changes match our robust dynamic privilege delegation and upstream Clash prioritization alignments.</p>
-
-                <div class="code-explorer">
-                    <!-- File Navigation Tree -->
-                    <div class="file-list">
-                        <button class="file-btn active" onclick="selectFile('validate_ecosystem.sh', this)">
-                            <span>validate_ecosystem.sh</span>
-                            <span class="badge-file">Script</span>
-                        </button>
-                        <button class="file-btn" onclick="selectFile('hermes_wrapper.sh', this)">
-                            <span>hermes_wrapper.sh</span>
-                            <span class="badge-file">Wrapper</span>
-                        </button>
-                        <button class="file-btn" onclick="selectFile('kiro_gateway_wrapper.sh', this)">
-                            <span>kiro_gateway_wrapper.sh</span>
-                            <span class="badge-file">Wrapper</span>
-                        </button>
-                        <button class="file-btn" onclick="selectFile('owl-forward-proxy.service', this)">
-                            <span>owl-forward-proxy.service</span>
-                            <span class="badge-file">Systemd</span>
-                        </button>
-                        <button class="file-btn" onclick="selectFile('kiro-gateway.service', this)">
-                            <span>kiro-gateway.service</span>
-                            <span class="badge-file">Systemd</span>
-                        </button>
-                        <button class="file-btn" onclick="selectFile('opencode.jsonc', this)">
-                            <span>opencode.jsonc (mcp)</span>
-                            <span class="badge-file">Config</span>
-                        </button>
-                    </div>
-
-                    <!-- Code Viewer Panel -->
-                    <div class="code-view-container">
-                        <div class="code-header">
-                            <span class="code-filename" id="current-filename">validate_ecosystem.sh</span>
-                            <button class="copy-btn" onclick="copyCurrentCode()">Copy Code</button>
-                        </div>
-                        <pre class="code-content" id="code-display">Loading source...</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 4: Self-Healing Diagnostics -->
+        <!-- TAB 4: Diagnostics Terminal -->
         <div id="tab-diagnostics" class="tab-content">
             <div class="card">
-                <h2 class="card-title">🩺 Live System Triage Terminal Simulator</h2>
-                <p>Run a simulated diagnostics sweep of the validation script to see how the system automatically checks for duplicate processes, unsets dead env parameters, restores failing service contexts, and validates upstream Clash connectivity.</p>
+                <h2 class="card-title">🩺 Live System Triage Telemetry Simulator</h2>
+                <p>Experience an interactive telemetry sweep of the validation script. The simulator shows how the script triages environment states, unsets conflicts, unbinds duplicates, and secures connections.</p>
                 
                 <button class="btn-run-sim" onclick="runDiagnosticSimulation()">⚡ Run System Diagnostics Simulation</button>
 
@@ -800,64 +693,28 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- TAB 5: FAQ & Troubleshooting -->
-        <div id="tab-faq" class="tab-content">
-            <div class="card">
-                <h2 class="card-title">❓ Ecosystem FAQ & Incident Management</h2>
-                
-                <div class="accordion">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">
-                        <span>What is the difference between kiro-cli and kiro-gateway?</span>
-                        <span class="accordion-arrow">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="accordion-body">
-                            <strong>kiro-cli:</strong> The native binary used to perform OIDC Builder ID logins and update credential stores.<br>
-                            <strong>kiro-gateway:</strong> The python proxy server running in the background to translate active OpenAI/Anthropic calls dynamically. You need both to retain continuous communication.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">
-                        <span>How do I triage a 403 Forbidden / 502 Bad Gateway monthly quota issue?</span>
-                        <span class="accordion-arrow">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="accordion-body">
-                            This occurs when the active Builder ID monthly free quota has been fully consumed. The system automatically degrades to its 13 cached fallback models. To recover full operations, register a new free Builder ID, run <code>kiro-cli login</code>, and restart the gateway service: <code>systemctl --user restart kiro-gateway.service</code>.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">
-                        <span>What common operational mistakes must be avoided?</span>
-                        <span class="accordion-arrow">▼</span>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="accordion-body">
-                            1. <strong>Duplicate Port Bindings (Errno 98):</strong> Running manual python sessions while the systemd unit is active.<br>
-                            2. <strong>Dead Lowecase Variables:</strong> Leaving dead variables (like port 2080) in the environment.<br>
-                            3. <strong>NO_PROXY Pollution:</strong> Adding AWS backend endpoints inside the NO_PROXY string, which bypasses geo-routing entirely.
-                        </div>
-                    </div>
-                </div>
+    <!-- Code Display Modal -->
+    <div class="code-modal" id="code-modal">
+        <div class="code-modal-content">
+            <div class="code-modal-header">
+                <span class="code-filename" id="modal-filename">File Source</span>
+                <button class="code-modal-close" onclick="closeCodeModal()">×</button>
             </div>
+            <pre class="code-modal-body" id="modal-body"></pre>
         </div>
     </div>
 
-    <!-- Success Copy Popup -->
-    <div class="alert-popup" id="alert-popup">Code Copied Successfully!</div>
+    <!-- Alert Popup -->
+    <div class="alert-popup" id="alert-popup">Code Copied!</div>
 
     <footer>
-        <p>🦉 Kiro / OWL / Hermes / Clash Proxy Ecosystem Replication Manual | Maintained under GitHub marktantongco</p>
+        <p>Owl-Agent & Kiro Proxy Ecosystem Manual | Maintained under GitHub marktantongco</p>
     </footer>
 
-    <!-- Interactive Logic Javascript -->
     <script>
-        // Tab Switching
+        // Tab switching
         function switchTab(evt, tabId) {
             const tabs = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabs.length; i++) {
@@ -871,208 +728,102 @@
             evt.currentTarget.classList.add("active");
         }
 
-        // Accordion Toggle
-        function toggleAccordion(element) {
-            const accordion = element.parentElement;
-            accordion.classList.toggle("open");
-        }
-
-        // Code Database
-        const filesData = {
-            'validate_ecosystem.sh': `#!/bin/bash
-# 🦉 Kiro/OWL Proxy Ecosystem - Validator & Auto-Patch Script
-set -euo pipefail
-
-BOLD='\\033[1m'
-GREEN='\\033[0;32m'
-YELLOW='\\033[1;33m'
-CYAN='\\033[0;36m'
-RED='\\033[0;31m'
-NC='\\033[0m'
-
-info()  { echo -e "\${CYAN}➜\${NC} \$1"; }
-ok()    { echo -e "\${GREEN}✓\${NC} \$1"; }
-warn()  { echo -e "\${YELLOW}⚠\${NC} \$1"; }
-err()   { echo -e "\${RED}✗\${NC} \$1"; }
-step()  { echo; echo -e "\${BOLD}[\$1]\${NC} \$2"; }
-
-echo ""
-echo -e "\${BOLD}  🦉 Proxy Ecosystem - System Diagnostic & Self-Healing Patch\${NC}"
-echo "  ───────────────────────────────────────────────────────────────"
-
-step "1" "Auditing Shell Proxy Environment Variables..."
-DEAD_PORT=2080
-for var in http_proxy https_proxy all_proxy; do
-    if env | grep -qi "^\${var}="; then
-        val=\$(env | grep -i "^\${var}=" | cut -d= -f2)
-        if [[ "\$val" == *"\$DEAD_PORT"* ]]; then
-            warn "Found conflicting lowercase '\$var' pointing to dead port \$DEAD_PORT!"
-            warn "  Current value: \$val"
-        else
-            ok "Lowercase variable '\$var' is clean."
-        fi
-    fi
-done
-
-step "2" "Auditing Active Port Bindings & Process Health..."
-if ss -tulpn | grep -q ":7890 "; then
-    ok "Clash core (mihomo) is listening on port 7890."
-fi
-if ss -tulpn | grep -q ":60000 "; then
-    ok "OWL Forward Proxy is bound to port 60000."
-fi
-if ss -tulpn | grep -q ":8333 "; then
-    ok "Kiro Gateway is bound to port 8333."
-    PID=\$(ss -tulpn | grep ":8333 " | grep -oP 'pid=\\d+' | cut -d= -f2 || true)
-    if [[ -n "\$PID" ]]; then
-        PARENT_PID=\$(ps -p "\$PID" -o ppid= | tr -d ' ' || true)
-        if [[ "\$PARENT_PID" != "1" && "\$PARENT_PID" != "" ]]; then
-            warn "Duplicate manual Kiro Gateway detected!"
-            info "Killing manual process (PID \$PID) to restore systemd control..."
-            kill -9 "\$PID" || true
-            ok "Duplicate process terminated."
-        fi
-    fi
-fi
-
-step "3" "Validating & Repairing systemd Service Alignments..."
-SYSTEMCTL_CMD="systemctl --user"
-if [[ "\$EUID" -eq 0 ]]; then
-    SYSTEMCTL_CMD="sudo -u x1 systemctl --user"
-fi
-\$SYSTEMCTL_CMD is-active --quiet owl-forward-proxy.service && ok "owl-forward-proxy is running."
-\$SYSTEMCTL_CMD is-active --quiet kiro-gateway.service || {
-    warn "kiro-gateway is down! Launching..."
-    \$SYSTEMCTL_CMD start kiro-gateway.service
-    ok "kiro-gateway started."
-}
-
-step "4" "Verifying Terminal Wrapper Configurations..."
-[[ -f "/home/x1/.local/bin/hermes" ]] && ok "hermes wrapper active."
-
-step "5" "Running End-to-End Active Connection Check..."
-curl -sf -I -x http://127.0.0.1:60000 https://api.github.com/users/octocat >/dev/null 2>&1 && ok "HTTP Tunnel routes fully OPERATIONAL!"`,
-            
-            'hermes_wrapper.sh': `#!/bin/bash
-# 🦉 Hermes Agent - Secure Proxy Launcher Wrapper
-set -euo pipefail
-
-HERMES_DIR="/home/x1/Documents/ubuntu-obsidian"
-HERMES_CMD="python3" 
-HERMES_SCRIPT="agent.py"
-
-SYSTEMCTL_CMD="systemctl --user"
-if [[ "\$EUID" -eq 0 ]]; then
-    SYSTEMCTL_CMD="sudo -u x1 systemctl --user"
-fi
-
-if ! \$SYSTEMCTL_CMD is-active --quiet owl-forward-proxy.service; then
-    \$SYSTEMCTL_CMD start owl-forward-proxy.service
-    sleep 1.5
-fi
-
-export HTTP_PROXY="http://127.0.0.1:60000"
-export HTTPS_PROXY="http://127.0.0.1:60000"
-export NO_PROXY="localhost,127.0.0.1,.local,.localdomain,::1"
-
-cd "\$HERMES_DIR"
-exec "\$HERMES_CMD" "\$HERMES_SCRIPT" "\$@"`,
-            
-            'kiro_gateway_wrapper.sh': `#!/bin/bash
-# 🦉 Kiro Gateway - Terminal Launcher & Controller
-set -euo pipefail
-
-GATEWAY_DIR="/home/x1/Documents/proxy/kiro-gateway"
-VENV_PYTHON="\$GATEWAY_DIR/.venv/bin/python"
-MAIN_PY="\$GATEWAY_DIR/main.py"
-
-if systemctl --user is-active --quiet kiro-gateway.service; then
-    echo "⚠️  Kiro Gateway is currently running in the background as a systemd service." >&2
-    exec journalctl --user -u kiro-gateway.service -f -n 20
-fi
-
-exec "\$VENV_PYTHON" "\$MAIN_PY" "\$@"`,
-            
-            'owl-forward-proxy.service': `[Unit]
-Description=🦉 OWL-AGENT Forward Proxy — OpenCode HTTP_PROXY defense stack
-Documentation=https://github.com/owl-agent/forward-proxy
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/home/x1/.owl-agent/venv/bin/python /home/x1/.owl-agent/forward_proxy.py
-Restart=on-failure
-RestartSec=3
-StandardOutput=append:/home/x1/.owl-agent/logs/forward-proxy.log
-StandardError=append:/home/x1/.owl-agent/logs/forward-proxy.log
-Environment=UPSTREAM_PROXY=http://127.0.0.1:7890
-Environment=OWL_PROXY_HOST=127.0.0.1
-Environment=OWL_PROXY_PORT=60000
-
-[Install]
-WantedBy=default.target`,
-            
-            'kiro-gateway.service': `[Unit]
-Description=Kiro Gateway - AI Proxy for Amazon Q Developer
-After=network.target
-BindsTo=kiro-tokend.service
-After=kiro-tokend.service
-
-[Service]
-Type=simple
-WorkingDirectory=/home/x1/Documents/proxy/kiro-gateway
-Environment=PROXY_API_KEY=kiro-gateway-8333
-Environment=KIRO_CLI_DB_FILE=~/.local/share/kiro-cli/data.sqlite3
-ExecStart=/home/x1/Documents/proxy/kiro-gateway/.venv/bin/python main.py --port 8333
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=default.target`,
-            
-            'opencode.jsonc': `{
-  "mcp-servers": {
-    "obsidian-mcp": {
-      "type": "local",
-      "command": ["node", "/home/x1/.config/opencode/mcp-servers/obsidian-mcp/dist/index.js"],
-      "env": {
-        "OBSIDIAN_VAULT_PATH": "/home/x1/Documents/ubuntu-obsidian"
-      },
-      "enabled": true
-    }
-  }
-}`
-        };
-
-        // Select and Load Code
-        function selectFile(filename, element) {
-            const fileButtons = document.getElementsByClassName("file-btn");
-            for(let i=0; i<fileButtons.length; i++) {
-                fileButtons[i].classList.remove("active");
+        // File database
+        const filesCatalog = [
+            {
+                path: 'scripts/validate_ecosystem.sh',
+                category: 'Triage Script',
+                relation: 'Main self-healing suite. Resolves Bash read-only errors, terminates background collisions, and verifies pings.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/validate_ecosystem.sh',
+                code: `#!/bin/bash\n# 🦉 Kiro/OWL Proxy Ecosystem - Validator & Auto-Patch Script\n# Audits, unsets dead env variables, and tests routes.`
+            },
+            {
+                path: 'scripts/patch_owl_proxy.sh',
+                category: 'Triage Script',
+                relation: 'Upstream patch script. Injects proxy routing definitions into your local Python packages.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/patch_owl_proxy.sh',
+                code: `#!/bin/bash\n# Patches local python installations with custom UPSTREAM_PROXY variables.`
+            },
+            {
+                path: 'installers/install_kiro_owl_agent.sh',
+                category: 'Installer',
+                relation: 'Combination setup installer that automatically sets up local credentials databases, links, and Python wrappers.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/installers/install_kiro_owl_agent.sh',
+                code: `#!/bin/bash\n# Downloads and provisions local Kiro auth CLI alongside the OWL forwarding proxy.`
+            },
+            {
+                path: 'installers/ubuntu_obsidian_install_owl_agent.sh',
+                category: 'Installer',
+                relation: 'Centrally provisions OWL workspaces for local Obsidian vaults, notes searches, and semantic models.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/installers/ubuntu_obsidian_install_owl_agent.sh',
+                code: `#!/bin/bash\n# Tailors OWL agent setup for local Obsidian workspaces.`
+            },
+            {
+                path: 'installers/owl_agent_installer.sh',
+                category: 'Installer',
+                relation: 'Base compilation system installer that downloads and builds standard OWL agent modules.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/installers/owl_agent_installer.sh',
+                code: `#!/bin/bash\n# Provisions standard system-wide OWL agent components.`
+            },
+            {
+                path: 'mcp/owl_resilient_mcp.py',
+                category: 'MCP Server',
+                relation: 'Resilient Model Context Protocol integration. Keeps semantic data searches securely routed and translated.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/mcp/owl_resilient_mcp.py',
+                code: `# Resilient Model Context Protocol server bridge\n# Integrates search operations safely.`
+            },
+            {
+                path: 'tests/test_parallel_research.py',
+                category: 'Test Suite',
+                relation: 'Tests concurrent research loops, verifying double-proxy environment limits and zero-leakage routing.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/tests/test_parallel_research.py',
+                code: `import asyncio\n# Tests concurrent network loops safely through the double proxy stack.`
+            },
+            {
+                path: 'configs/handoff-antigravity-autoapproval.md',
+                category: 'Configuration',
+                relation: 'Integrates Antigravity agentic auto-approval policy mapping into local configurations.',
+                download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/configs/handoff-antigravity-autoapproval.md',
+                code: `# Auto-Approval Policy Mapping\n- Auto-approve validated terminal commands\n- Enforce secure proxy lifecycles`
             }
-            element.classList.add("active");
-            document.getElementById("current-filename").innerText = filename;
-            document.getElementById("code-display").innerText = filesData[filename];
-        }
+        ];
 
-        // Set initial file load
-        document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById("code-display").innerText = filesData['validate_ecosystem.sh'];
-        });
-
-        // Copy Current Code
-        function copyCurrentCode() {
-            const codeText = document.getElementById("code-display").innerText;
-            navigator.clipboard.writeText(codeText).then(() => {
-                const alertPopup = document.getElementById("alert-popup");
-                alertPopup.classList.add("show");
-                setTimeout(() => {
-                    alertPopup.classList.remove("show");
-                }, 2000);
+        // Load Catalog
+        function loadCatalog() {
+            const container = document.getElementById("catalog-container");
+            filesCatalog.forEach(file => {
+                const item = document.createElement("div");
+                item.className = "file-item";
+                item.innerHTML = `
+                    <div class="file-meta">
+                        <span class="file-path">${file.path}</span>
+                        <span class="file-category">${file.category}</span>
+                    </div>
+                    <div class="file-relation">${file.relation}</div>
+                    <div class="file-actions">
+                        <a href="${file.download}" class="btn-action btn-action-primary" target="_blank">Download File</a>
+                        <button onclick="viewCode('${file.path}')" class="btn-action btn-action-secondary">Inspect File</button>
+                    </div>
+                `;
+                container.appendChild(item);
             });
         }
 
-        // Simulated Diagnostic Terminal Run
+        // View Code Modal
+        function viewCode(filePath) {
+            const file = filesCatalog.find(f => f.path === filePath);
+            if (file) {
+                document.getElementById("modal-filename").innerText = filePath;
+                document.getElementById("modal-body").innerText = file.code + '\n\n# ... [Full Code Available via Download Action]';
+                document.getElementById("code-modal").style.display = "flex";
+            }
+        }
+
+        function closeCodeModal() {
+            document.getElementById("code-modal").style.display = "none";
+        }
+
+        // Diagnostics Simulator
         function runDiagnosticSimulation() {
             const terminal = document.getElementById("terminal-screen");
             terminal.innerHTML = '';
@@ -1082,38 +833,39 @@ WantedBy=default.target`,
                 { text: "  🦉 Proxy Ecosystem - System Diagnostic & Self-Healing Patch", color: "#fff", delay: 400 },
                 { text: "  ───────────────────────────────────────────────────────────────", color: "#888", delay: 600 },
                 { text: "[1] Auditing Shell Proxy Environment Variables...", color: "#66fcf1", delay: 1000 },
-                { text: "⚠ Found conflicting lowercase 'http_proxy' pointing to dead port 2080!", color: "#ff4a5a", delay: 1300 },
-                { text: "✓ HTTP_PROXY is defined: http://127.0.0.1:60000", color: "#39e3a6", delay: 1600 },
+                { text: "✓ HTTP_PROXY is defined: http://127.0.0.1:60000", color: "#39e3a6", delay: 1300 },
                 { text: "[2] Auditing Active Port Bindings & Process Health...", color: "#66fcf1", delay: 2000 },
                 { text: "✓ Clash core (mihomo) is listening on port 7890.", color: "#39e3a6", delay: 2200 },
                 { text: "✓ OWL Forward Proxy is bound to port 60000.", color: "#39e3a6", delay: 2400 },
-                { text: "⚠ Duplicate manual Kiro Gateway detected! (PID: 127770)", color: "#ff4a5a", delay: 2700 },
-                { text: "➜ Killing manual process (PID 127770) to allow clean systemd control...", color: "#45f3ff", delay: 3000 },
-                { text: "✓ Duplicate process terminated.", color: "#39e3a6", delay: 3300 },
-                { text: "[3] Validating & Repairing systemd Service Alignments...", color: "#66fcf1", delay: 3700 },
-                { text: "✓ owl-forward-proxy.service is active and healthy.", color: "#39e3a6", delay: 3900 },
-                { text: "⚠ kiro-gateway.service is inactive or failed! Attempting restart...", color: "#ff4a5a", delay: 4200 },
-                { text: "✓ kiro-gateway.service successfully aligned and started.", color: "#39e3a6", delay: 4800 },
-                { text: "[4] Verifying Terminal Wrapper Configurations...", color: "#66fcf1", delay: 5200 },
-                { text: "✓ hermes wrapper is correctly synchronized.", color: "#39e3a6", delay: 5400 },
-                { text: "[5] Running End-to-End Active Connection Check...", color: "#66fcf1", delay: 5800 },
-                { text: "✓ Active check: HTTP tunnel through OWL Proxy -> Clash -> Outside World is fully OPERATIONAL!", color: "#39e3a6", delay: 6200 },
-                { text: "=============================================", color: "#888", delay: 6700 },
-                { text: "✅ Diagnostics & Healing Completed!", color: "#39e3a6", delay: 6900 },
-                { text: "=============================================", color: "#888", delay: 7100 }
+                { text: "✓ Kiro Gateway is active and bound to port 8333.", color: "#39e3a6", delay: 2700 },
+                { text: "[3] Validating & Repairing systemd Service Alignments...", color: "#66fcf1", delay: 3200 },
+                { text: "✓ owl-forward-proxy.service is active and healthy.", color: "#39e3a6", delay: 3500 },
+                { text: "✓ kiro-gateway.service is active and healthy.", color: "#39e3a6", delay: 3800 },
+                { text: "[4] Verifying Terminal Wrapper Configurations...", color: "#66fcf1", delay: 4200 },
+                { text: "✓ hermes wrapper is correctly synchronized.", color: "#39e3a6", delay: 4500 },
+                { text: "[5] Running End-to-End Active Connection Check...", color: "#66fcf1", delay: 5000 },
+                { text: "✓ Active check: HTTP tunnel through OWL Proxy -> Clash -> Outside World is fully OPERATIONAL!", color: "#39e3a6", delay: 5500 },
+                { text: "=============================================", color: "#888", delay: 6000 },
+                { text: "✅ Diagnostics & Healing Completed!", color: "#39e3a6", delay: 6200 },
+                { text: "=============================================", color: "#888", delay: 6400 }
             ];
 
             logLines.forEach(line => {
                 setTimeout(() => {
                     const el = document.createElement("div");
-                    el.className = "terminal-line";
                     el.style.color = line.color;
+                    el.style.marginBottom = "0.4rem";
                     el.innerText = line.text;
                     terminal.appendChild(el);
                     terminal.scrollTop = terminal.scrollHeight;
                 }, line.delay);
             });
         }
+
+        // Init
+        document.addEventListener("DOMContentLoaded", () => {
+            loadCatalog();
+        });
     </script>
 </body>
 </html>
