@@ -4,22 +4,31 @@ Welcome to the comprehensive, self-healing **AI Wrapper and Secure Proxy Replica
 
 ---
 
-## 📐 1. Dynamic Ecosystem Architecture
+## 📐 1. Advanced 8-Node Ecosystem Architecture
 
-Our network stack encapsulates local HTTP traffic and routes it dynamically through a double-proxy tunnel to secure regional endpoints without global environment pollution:
+Our network stack encapsulates local HTTP traffic and routes it dynamically through a double-proxy tunnel to secure regional endpoints. Below is the complete architectural layout of all 8 nodes, spanning provisioning, validation, client wrappers, IDE MCP servers, translation layers, and weighted geo-routers:
 
 ```
-  [ Standalone Hermes CLI ]               [ OpenCode Editor / IDE ]
-              ↓                                       ↓
-     (hermes wrapper)                        (opencode.jsonc settings)
-              ↓                                       ↓
-   [ Explicit HTTP_PROXY ]                 [ Kiro Gateway (Port 8333) ]
-              ↓                                       ↓ (Translates API)
-  [ OWL Forward Proxy (Port 60000) ] ─────────────────┛
-              ↓ (UPSTREAM_PROXY)
-   [ Clash / mihomo (Port 7890) ]
-              ↓ (Secure Geo-Routing)
-        [ Outside World ]
+                  [ 1. PROVISIONING ENGINE ]
+                  (install_owl_agent.sh)
+                      │             │
+                      ▼ (deploys)   ▼ (deploys)
+   [ 3. STANDALONE HERMES ]         [ 8. KIRO GATEWAY (Port 8333) ] ◄──┐
+   (Isolated CLI wrapper)           (translates Anthropic/OIDC)         │
+              │                                 │                       │ (MCP search)
+              ▼ (enforces HTTP_PROXY)           ▼ (routes requests)     │
+   [ 4. OWL DEFENSE PROXY (Port 60000) ] ◄──────┘                       │
+              │             ▲                                           │
+              │             │ (validates throughput)                    │
+              │     [ 2. CONCURRENCY HARNESS ]               [ 7. RESILIENT MCP ]
+              │     (test_parallel_research.py)              (owl_resilient_mcp.py)
+              │                                                         ▲
+              ▼ (forwards UPSTREAM_PROXY)                               │ (indexes)
+   [ 5. CLASH ROUTER CORE (Port 7890) ]                                 │
+   (Mihomo weighted geo-routing)                             [ 6. OPENCODE WORKSPACE ]
+              │                                              (IDE Settings Map)
+              ▼
+      [ OUTSIDE WORLD (WAN) ]
 ```
 
 ---
@@ -32,22 +41,21 @@ This replication suite is organized logically into specific functional directori
 * **[`validate_ecosystem.sh`](./scripts/validate_ecosystem.sh)**: The automated self-healing diagnostic suite. Detects lowercase variable pollution, kills manual port bindings on `8333` and `60000` to prevent collisions, verifies systemd services, and runs an end-to-end active ping.
 * **[`patch_owl_proxy.sh`](./scripts/patch_owl_proxy.sh)**: Installs the Clash upstream routing overrides inside your active python OWL installations, unsets conflicting environmental routes, and restores fallback definitions.
 * **[`install.sh`](./scripts/install.sh)**: Base system compilation and binary fetcher script.
-* **[`owl_agent_installer_v4.sh`](./scripts/owl_agent_installer_v4.sh)**: The standard OWL agent configuration installer.
 * **[`hermes_wrapper.sh`](./scripts/hermes_wrapper.sh)**: Launcher wrapper (deploys to `~/.local/bin/hermes`). Isolates `HTTP_PROXY` within the agent command lifecycle and delegates systemd checks to the correct standard user when running under root.
 * **[`kiro_gateway_wrapper.sh`](./scripts/kiro_gateway_wrapper.sh)**: Standard Kiro terminal launcher.
 
 ### 🛠️ Dedicated Installers (`/installers`)
-* **[`install_kiro_owl_agent.sh`](./installers/install_kiro_owl_agent.sh)**: Fully customized combo installer script for deploying Kiro CLI credentials management alongside the OWL forwarding proxy.
-* **[`ubuntu_obsidian_install_owl_agent.sh`](./installers/ubuntu_obsidian_install_owl_agent.sh)**: Obsidian-centric OWL workspace installer, setting up notes search and indexing scopes.
-* **[`owl_agent_installer.sh`](./installers/owl_agent_installer.sh)**: Standard system-wide installer for compiling and starting OWL core.
+* **[`install_owl_agent.sh`](./installers/install_owl_agent.sh)**: *Deduplicated Core Installer.* Custom-built to download `kiro-cli` native binaries from AWS S3, repair dynamic linkers (`ld-linux`), initialize credentials pools, and provision the OWL proxy defense stack at `~/.owl-agent` with robust retry pipelines.
+* **[`install_kiro_owl_agent.sh`](./installers/install_kiro_owl_agent.sh)**: Dedicated installer script for cloning and provisioning the `kiro-gateway` python service, setting up its virtual environment, and configuring parameters in `opencode.jsonc`.
 
 ### 🧠 MCP Integration (`/mcp`)
-* **[`owl_resilient_mcp.py`](./mcp/owl_resilient_mcp.py)**: The premium Model Context Protocol (MCP) server bridge. Translates semantic search and tool executions, keeping queries securely encapsulated.
+* **[`owl_resilient_mcp.py`](./mcp/owl_resilient_mcp.py)**: The premium Model Context Protocol (MCP) server bridge. Translates OpenCode semantic searches and indexes local Obsidian vaults directly through our proxy stack.
 
 ### 🧪 Integration Tests (`/tests`)
 * **[`test_parallel_research.py`](./tests/test_parallel_research.py)**: Operational pipeline test suite to verify that concurrent model requests run securely through the double-proxy environment without triggering rate limits or leakage.
 
 ### 📝 Config Maps & Daemons (`/configs` & `/systemd`)
+* **[`ai-instructions-handover.md`](./configs/ai-instructions-handover.md)**: *Handover Playbook.* Standard system manual designed specifically for external AI coding agents to parse, configure, connect, deploy, and maintain the proxy stack.
 * **[`handoff-antigravity-autoapproval.md`](./configs/handoff-antigravity-autoapproval.md)**: Dynamic agent auto-approval security ruleset.
 * **[`kiro-gateway.service`](./systemd/kiro-gateway.service)**: Systemd user-service unit mapping for running Kiro background API translators.
 * **[`owl-forward-proxy.service`](./systemd/owl-forward-proxy.service)**: Systemd user-service unit mapping for running OWL forward proxies.
@@ -62,12 +70,17 @@ To reproduce this exact operational environment on another machine, execute thes
 Ensure Clash (`mihomo` or equivalent) is installed, running, and listening on **port `7890`**.
 
 ### Step 2: Running the Installers
-1. Run the combo agent installer to deploy credentials and core components:
+1. Run the core installer script to deploy credentials, libc links, and Core OWL agents:
+   ```bash
+   chmod +x installers/install_owl_agent.sh
+   ./installers/install_owl_agent.sh
+   ```
+2. Provision Kiro gateway translation engines:
    ```bash
    chmod +x installers/install_kiro_owl_agent.sh
    ./installers/install_kiro_owl_agent.sh
    ```
-2. Verify systemd units are correctly installed:
+3. Verify systemd units are correctly installed:
    ```bash
    cp systemd/*.service ~/.config/systemd/user/
    systemctl --user daemon-reload
