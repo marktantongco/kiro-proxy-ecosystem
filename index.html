@@ -540,6 +540,7 @@
         <nav class="tab-nav">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-architecture')">📐 Architecture Map</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-catalog')">📁 Downloads & Catalog</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-guide')">🚀 Replication Walkthrough</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-wizard')">🛠️ Step-by-Step Wizards</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-diagnostics')">🩺 Diagnostics Terminal</button>
         </nav>
@@ -664,6 +665,86 @@
                             Select a script from the list to read its logical relationship in the ecosystem.
                         </div>
                         <pre class="code-content" id="code-display">Select a file from the explorer on the left to start inspecting.</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Replication Walkthrough -->
+        <div id="tab-guide" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">🚀 Complete Step-by-Step Replication Walkthrough</h2>
+                <p style="margin-bottom: 2rem;">Follow this structured, sequential operational process to replicate the complete self-healing double-proxy wrapper stack on any workstation from scratch.</p>
+                
+                <div class="step-timeline">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <h3 class="step-title">Deploy Upstream Routing Core</h3>
+                        <p class="step-desc">
+                            <strong>Files Used:</strong> <code>Clash / Mihomo Core daemon</code><br>
+                            <strong>Purpose:</strong> Sets up the foundational weighted proxy routing base on <strong>Port 7890</strong>. All external connections flow through this layer for geo-routing bypasses.<br>
+                            <strong>Action:</strong> Ensure Clash/Mihomo is active and listening locally: <code>systemctl --user status mihomo</code> or run manual binary check.
+                        </p>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <h3 class="step-title">Execute Core Workspace Provisioner</h3>
+                        <p class="step-desc">
+                            <strong>Files Used:</strong> <code>installers/install_owl_agent.sh</code><br>
+                            <strong>Purpose:</strong> Deduplicated Core Setup. Creates workspace directories, provisions local dynamic libraries, registers dependencies, downloads the Kiro CLI client native binaries, and creates local SQL database credentials mappings.<br>
+                            <strong>Action:</strong> Run: <code>chmod +x installers/install_owl_agent.sh && ./installers/install_owl_agent.sh</code>.
+                        </p>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <h3 class="step-title">Execute Kiro Gateway Provisioner</h3>
+                        <p class="step-desc">
+                            <strong>Files Used:</strong> <code>installers/install_kiro_owl_agent.sh</code><br>
+                            <strong>Purpose:</strong> Automates Python virtual environment creation, clones the <code>kiro-gateway</code> translation engine, and automatically updates key schema entries (such as heavy/light templates) in your local <code>opencode.jsonc</code> config.<br>
+                            <strong>Action:</strong> Run: <code>chmod +x installers/install_kiro_owl_agent.sh && ./installers/install_kiro_owl_agent.sh</code>.
+                        </p>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <h3 class="step-title">Deploy and Start systemd Daemons</h3>
+                        <p class="step-desc">
+                            <strong>Files Used:</strong> <code>systemd/kiro-gateway.service</code>, <code>systemd/owl-forward-proxy.service</code><br>
+                            <strong>Purpose:</strong> Registers the stack as automatic background processes managed by systemd under user-level context. Ensures self-healing restarts on failure.<br>
+                            <strong>Action:</strong> Copy to systemd directories: <code>cp systemd/*.service ~/.config/systemd/user/</code>, reload systemd, and enable/start the daemons: <code>systemctl --user daemon-reload && systemctl --user enable --now owl-forward-proxy.service kiro-gateway.service</code>.
+                        </p>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">5</div>
+                        <h3 class="step-title">Inject Upstream Routing Rules</h3>
+                        <p class="step-desc">
+                            <strong>Files Used:</strong> <code>scripts/patch_owl_proxy.sh</code>, <code>scripts/validate_ecosystem.sh</code><br>
+                            <strong>Purpose:</strong> Overwrites downstream proxy code blocks with Clash upstream routing parameters, terminates conflicting background processes, and unsets manual variable pollution.<br>
+                            <strong>Action:</strong> Run: <code>chmod +x scripts/patch_owl_proxy.sh && ./scripts/patch_owl_proxy.sh</code>.
+                        </p>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">6</div>
+                        <h3 class="step-title">Secure Command Shell Launcher Wrappers</h3>
+                        <p class="step-desc">
+                            <strong>Files Used:</strong> <code>scripts/hermes_wrapper.sh</code>, <code>scripts/agy_wrapper.sh</code><br>
+                            <strong>Purpose:</strong> Wraps execution of hermes, agy, and kiro-gateway inside isolated, secure, zero-leakage proxy shell blocks. Deploys launchers directly to <code>~/.local/bin/</code> for seamless PATH discovery.<br>
+                            <strong>Action:</strong> Copy wrappers to local path: <code>cp scripts/hermes_wrapper.sh ~/.local/bin/hermes && cp scripts/agy_wrapper.sh ~/.local/bin/agy && chmod +x ~/.local/bin/hermes ~/.local/bin/agy</code>.
+                        </p>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">7</div>
+                        <h3 class="step-title">Verify System Integration & Direct Bypass Routing</h3>
+                        <p class="step-desc">
+                            <strong>Files Used:</strong> <code>scripts/diagnose_opencode.sh</code><br>
+                            <strong>Purpose:</strong> The final validation gate. Performs port status analysis, audits system environment parameters, detects Unix domain socket session health, and validates HTTPS direct connection bypass rules for NVIDIA NIM and OpenCode Zen model endpoints.<br>
+                            <strong>Action:</strong> Run the diagnostic suite: <code>chmod +x scripts/diagnose_opencode.sh && ./scripts/diagnose_opencode.sh</code>. Alternatively, use the <code>owl-check</code> shell alias.
+                        </p>
                     </div>
                 </div>
             </div>
