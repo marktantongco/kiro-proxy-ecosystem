@@ -39,9 +39,11 @@ This replication suite is organized logically into specific functional directori
 
 ### ⚙️ Core Wrappers & Scripts (`/scripts`)
 * **[`validate_ecosystem.sh`](./scripts/validate_ecosystem.sh)**: The automated self-healing diagnostic suite. Detects lowercase variable pollution, kills manual port bindings on `8333` and `60000` to prevent collisions, verifies systemd services, and runs an end-to-end active ping.
+* **[`diagnose_opencode.sh`](./scripts/diagnose_opencode.sh)**: Automated self-healing diagnostic tool. Evaluates core system listener ports, resolves terminal Unix domain socket mismatches, and tests direct-connect proxy bypass rules.
 * **[`patch_owl_proxy.sh`](./scripts/patch_owl_proxy.sh)**: Installs the Clash upstream routing overrides inside your active python OWL installations, unsets conflicting environmental routes, and restores fallback definitions.
 * **[`install.sh`](./scripts/install.sh)**: Base system compilation and binary fetcher script.
 * **[`hermes_wrapper.sh`](./scripts/hermes_wrapper.sh)**: Launcher wrapper (deploys to `~/.local/bin/hermes`). Isolates `HTTP_PROXY` within the agent command lifecycle and delegates systemd checks to the correct standard user when running under root.
+* **[`agy_wrapper.sh`](./scripts/agy_wrapper.sh)**: Antigravity secure proxy wrapper launcher (deploys to `~/.local/bin/agy`). Ensures active proxy connection and intercepts environmental variable scopes dynamically before delegating to `agy.real`.
 * **[`kiro_gateway_wrapper.sh`](./scripts/kiro_gateway_wrapper.sh)**: Standard Kiro terminal launcher.
 
 ### 🛠️ Dedicated Installers (`/installers`)
@@ -57,6 +59,7 @@ This replication suite is organized logically into specific functional directori
 ### 📝 Config Maps & Daemons (`/configs` & `/systemd`)
 * **[`ai-instructions-handover.md`](./configs/ai-instructions-handover.md)**: *Handover Playbook.* Standard system manual designed specifically for external AI coding agents to parse, configure, connect, deploy, and maintain the proxy stack.
 * **[`handoff-antigravity-autoapproval.md`](./configs/handoff-antigravity-autoapproval.md)**: Dynamic agent auto-approval security ruleset.
+* **[`README_PROXY_ARCHITECTURE.md`](./configs/README_PROXY_ARCHITECTURE.md)**: Comprehensive proxy bypass routing architecture manual for NVIDIA NIM and OpenCode Zen model providers.
 * **[`kiro-gateway.service`](./systemd/kiro-gateway.service)**: Systemd user-service unit mapping for running Kiro background API translators.
 * **[`owl-forward-proxy.service`](./systemd/owl-forward-proxy.service)**: Systemd user-service unit mapping for running OWL forward proxies.
 

@@ -162,6 +162,18 @@ else
     warn "hermes wrapper not found at $HERMES_WRAP!"
 fi
 
+# antigravity wrapper check
+AGY_WRAP="/home/x1/.local/bin/agy"
+if [[ -f "$AGY_WRAP" ]]; then
+    if grep -q "export HTTP_PROXY=" "$AGY_WRAP"; then
+        ok "antigravity (agy) wrapper is correctly synchronized to secure proxy (port 60000)."
+    else
+        warn "antigravity (agy) wrapper is missing proxy variables! Please ensure it enforces proxy env."
+    fi
+else
+    warn "antigravity (agy) wrapper not found at $AGY_WRAP!"
+fi
+
 # kiro-cli wrapper check
 KIRO_WRAP="/home/x1/.owl-agent/kiro-cli"
 if [[ -f "$KIRO_WRAP" ]]; then

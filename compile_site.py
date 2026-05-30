@@ -41,6 +41,16 @@ files_to_compile = [
         "path": "configs/ai-instructions-handover.md",
         "category": "AI Instructions",
         "relation": "The comprehensive handover instruction manual designed specifically for AI coding agents to recreate, connect, deploy, and maintain the stack."
+    },
+    {
+        "path": "scripts/diagnose_opencode.sh",
+        "category": "Triage Script",
+        "relation": "Automated self-healing diagnostics check. Pinpoints active ports, Unix socket mismatches, and tests direct-connect proxy bypass rules."
+    },
+    {
+        "path": "configs/README_PROXY_ARCHITECTURE.md",
+        "category": "Documentation",
+        "relation": "Comprehensive proxy bypass routing architecture manual for NVIDIA NIM and OpenCode Zen model providers."
     }
 ]
 
