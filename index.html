@@ -198,9 +198,6 @@
             margin-bottom: 1.5rem;
             border-left: 4px solid var(--color-primary);
             padding-left: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
         /* Architecture Flowchart SVG */
@@ -240,106 +237,140 @@
             animation: dash 4s linear infinite;
         }
 
-        /* File Explorer & Catalog Grid */
-        .catalog-grid {
+        /* Two-Column Explorer Layout (Restored) */
+        .code-explorer {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
         }
 
-        @media (max-width: 768px) {
-            .catalog-grid {
+        @media (max-width: 900px) {
+            .code-explorer {
                 grid-template-columns: 1fr;
             }
         }
 
-        .file-item {
-            background: var(--bg-deep);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all var(--transition-speed);
+        .file-list {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .file-item:hover {
-            border-color: var(--color-primary);
-            box-shadow: 0 4px 20px rgba(102, 252, 241, 0.1);
-        }
-
-        .file-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-        }
-
-        .file-path {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            color: var(--color-primary);
-            word-break: break-all;
-        }
-
-        .file-category {
-            background: rgba(255,255,255,0.05);
-            color: var(--color-text-main);
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .file-relation {
-            font-size: 0.9rem;
-            color: var(--color-text-main);
-            margin-bottom: 1.5rem;
-            min-height: 50px;
-        }
-
-        .file-actions {
-            display: flex;
             gap: 0.75rem;
         }
 
-        .btn-action {
-            flex-grow: 1;
-            padding: 0.6rem 1rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 700;
+        .file-btn {
+            background: var(--bg-deep);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
             cursor: pointer;
-            text-align: center;
+            text-align: left;
             transition: all var(--transition-speed);
-            text-decoration: none;
-            font-family: var(--font-display);
+            color: var(--color-text-main);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
         }
 
-        .btn-action-primary {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-            color: var(--bg-deep);
-            border: none;
-        }
-
-        .btn-action-primary:hover {
-            opacity: 0.9;
-        }
-
-        .btn-action-secondary {
-            background: transparent;
-            border: 1px solid rgba(102, 252, 241, 0.4);
-            color: var(--color-primary);
-        }
-
-        .btn-action-secondary:hover {
+        .file-btn:hover, .file-btn.active {
+            border-color: var(--color-primary);
+            color: var(--color-text-light);
             background: rgba(102, 252, 241, 0.05);
         }
 
-        /* Replication Wizard */
+        .file-btn-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .badge-file {
+            font-size: 0.65rem;
+            background: rgba(255,255,255,0.1);
+            color: var(--color-text-main);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .file-btn.active .badge-file {
+            background: var(--color-primary);
+            color: var(--bg-deep);
+        }
+
+        .code-view-container {
+            position: relative;
+            background: #0d0e12;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 620px;
+        }
+
+        .code-header {
+            background: #14161d;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .code-filename {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--color-primary);
+        }
+
+        .action-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: rgba(102, 252, 241, 0.1);
+            border: 1px solid rgba(102, 252, 241, 0.3);
+            color: var(--color-primary);
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all var(--transition-speed);
+        }
+
+        .action-btn:hover {
+            background: var(--color-primary);
+            color: var(--bg-deep);
+        }
+
+        .code-info-panel {
+            background: #10121a;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+            color: var(--color-text-main);
+        }
+
+        .code-content {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow: auto;
+            margin: 0;
+            color: #d1d5db;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            background: #0f1015;
+            line-height: 1.5;
+        }
+
+        /* Step Wizards */
         .step-timeline {
             position: relative;
             padding-left: 2.5rem;
@@ -454,71 +485,12 @@
             transform: translateY(20px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
+            pointer-events: none;
         }
 
         .alert-popup.show {
             opacity: 1;
             transform: translateY(0);
-        }
-
-        /* Code display modal */
-        .code-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .code-modal-content {
-            background: var(--bg-deep);
-            border: 1px solid var(--color-primary);
-            border-radius: 16px;
-            width: 80%;
-            max-width: 900px;
-            height: 80%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .code-modal-header {
-            background: var(--bg-card);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .code-modal-close {
-            color: var(--color-text-main);
-            font-size: 1.5rem;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        .code-modal-close:hover {
-            color: var(--color-accent-red);
-        }
-
-        .code-modal-body {
-            flex-grow: 1;
-            padding: 1.5rem;
-            overflow: auto;
-            background: #0d0e12;
-            color: #d1d5db;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            white-space: pre-wrap;
-            margin: 0;
         }
 
         footer {
@@ -585,7 +557,6 @@
                                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#66fcf1" />
                             </marker>
                         </defs>
-                        <!-- Nodes Group -->
                         <rect x="50" y="50" width="180" height="60" rx="8" class="flow-node" />
                         <text x="140" y="85" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="14">Hermes Agent</text>
                         <text x="140" y="100" fill="#66fcf1" font-size="11" text-anchor="middle" font-family="Space Mono">Standalone CLI</text>
@@ -626,19 +597,37 @@
             </div>
         </div>
 
-        <!-- TAB 2: Downloads & Catalog -->
+        <!-- TAB 2: Downloads & Catalog (Restored Two Column Layout) -->
         <div id="tab-catalog" class="tab-content">
             <div class="card">
                 <h2 class="card-title">📁 Downloadable Ecosystem Files & Catalog</h2>
-                <p style="margin-bottom: 2rem;">Every file is structured and readily configured. Use the direct link actions to either download the files to your station or inspect their implementation details in the viewer modal.</p>
+                <p>Browse the exact structure of files deployed in the repository. Select any script to view its relationship in the ecosystem, inspect or copy its code mapping directly, and download it instantly.</p>
                 
-                <div class="catalog-grid" id="catalog-container">
-                    <!-- Dynamic File Items loaded via JS -->
+                <div class="code-explorer">
+                    <!-- File Navigation Tree (Left Column) -->
+                    <div class="file-list" id="explorer-file-list">
+                        <!-- Loaded dynamically via JavaScript -->
+                    </div>
+
+                    <!-- Code Viewer Panel (Right Column) -->
+                    <div class="code-view-container">
+                        <div class="code-header">
+                            <span class="code-filename" id="current-filename">Select a file</span>
+                            <div class="action-group">
+                                <a href="#" class="action-btn" id="btn-download" download>Download File</a>
+                                <button class="action-btn" onclick="copyCurrentCode()">Copy Code</button>
+                            </div>
+                        </div>
+                        <div class="code-info-panel" id="current-relationship">
+                            Select a script from the list to read its logical relationship in the ecosystem.
+                        </div>
+                        <pre class="code-content" id="code-display">Select a file from the explorer on the left to start inspecting.</pre>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: Step-by-Step Wizards -->
+        <!-- TAB 3: Step Wizards -->
         <div id="tab-wizard" class="tab-content">
             <div class="card">
                 <h2 class="card-title">🛠️ Logical Workflow Sequence for Replication</h2>
@@ -653,19 +642,20 @@
                     <div class="step-item">
                         <div class="step-number">2</div>
                         <h3 class="step-title">Deploy Unified Agent Installers</h3>
-                        <p class="step-desc">Run the newly added installers: <code>install_kiro_owl_agent.sh</code> or <code>owl_agent_installer.sh</code>. These scripts download, verify, and automatically compile Python libraries, OIDC token engines, and service managers.</p>
+                        <p class="step-desc">Run the combo agent installer to deploy credentials and core components:
+                           <code>install_kiro_owl_agent.sh</code> or <code>owl_agent_installer.sh</code>. These scripts download, verify, and automatically compile Python environments.</p>
                     </div>
 
                     <div class="step-item">
                         <div class="step-number">3</div>
                         <h3 class="step-title">Configure systemd Service Units</h3>
-                        <p class="step-desc">Deploy the <code>kiro-gateway.service</code> and <code>owl-forward-proxy.service</code> unit mappings to <code>~/.config/systemd/user/</code> and start the services to secure background processes.</p>
+                        <p class="step-desc">Deploy the <code>kiro-gateway.service</code> and <code>owl-forward-proxy.service</code> unit mappings to <code>~/.config/systemd/user/</code> and start the services.</p>
                     </div>
 
                     <div class="step-item">
                         <div class="step-number">4</div>
                         <h3 class="step-title">Execute Environment Self-Healing</h3>
-                        <p class="step-desc">Run <code>./scripts/validate_ecosystem.sh</code> to triage environment conflicts, terminate duplicate processes, and secure pings through your newly duplicated stack.</p>
+                        <p class="step-desc">Run <code>./scripts/validate_ecosystem.sh</code> to triage environment conflicts, terminate duplicate processes, and secure pings.</p>
                     </div>
                 </div>
             </div>
@@ -692,17 +682,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Code Display Modal -->
-    <div class="code-modal" id="code-modal">
-        <div class="code-modal-content">
-            <div class="code-modal-header">
-                <span class="code-filename" id="modal-filename">File Source</span>
-                <button class="code-modal-close" onclick="closeCodeModal()">×</button>
-            </div>
-            <pre class="code-modal-body" id="modal-body"></pre>
         </div>
     </div>
 
@@ -735,12 +714,12 @@
                 category: 'Triage Script',
                 relation: 'Main self-healing suite. Resolves Bash read-only errors, terminates background collisions, and verifies pings.',
                 download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/validate_ecosystem.sh',
-                code: `#!/bin/bash\n# 🦉 Kiro/OWL Proxy Ecosystem - Validator & Auto-Patch Script\n# Audits, unsets dead env variables, and tests routes.`
+                code: `#!/bin/bash\n# 🦉 Kiro/OWL Proxy Ecosystem - Validator & Auto-Patch Script\n# Audits environment variables, unsets lowercase conflicts, unbinds port duplicates.`
             },
             {
                 path: 'scripts/patch_owl_proxy.sh',
                 category: 'Triage Script',
-                relation: 'Upstream patch script. Injects proxy routing definitions into your local Python packages.',
+                relation: 'Upstream patch script. Injects Clash proxy routing definitions into your local Python packages.',
                 download: 'https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/patch_owl_proxy.sh',
                 code: `#!/bin/bash\n# Patches local python installations with custom UPSTREAM_PROXY variables.`
             },
@@ -788,39 +767,58 @@
             }
         ];
 
-        // Load Catalog
-        function loadCatalog() {
-            const container = document.getElementById("catalog-container");
-            filesCatalog.forEach(file => {
-                const item = document.createElement("div");
-                item.className = "file-item";
-                item.innerHTML = `
-                    <div class="file-meta">
-                        <span class="file-path">${file.path}</span>
-                        <span class="file-category">${file.category}</span>
-                    </div>
-                    <div class="file-relation">${file.relation}</div>
-                    <div class="file-actions">
-                        <a href="${file.download}" class="btn-action btn-action-primary" target="_blank">Download File</a>
-                        <button onclick="viewCode('${file.path}')" class="btn-action btn-action-secondary">Inspect File</button>
+        // Load Left Column Directory Explorer
+        function loadExplorer() {
+            const listContainer = document.getElementById("explorer-file-list");
+            listContainer.innerHTML = '';
+            
+            filesCatalog.forEach((file, index) => {
+                const btn = document.createElement("button");
+                btn.className = `file-btn ${index === 0 ? 'active' : ''}`;
+                btn.onclick = () => selectFile(file, btn);
+                btn.innerHTML = `
+                    <div class="file-btn-meta">
+                        <span>${file.path.split('/').pop()}</span>
+                        <span class="badge-file">${file.category}</span>
                     </div>
                 `;
-                container.appendChild(item);
+                listContainer.appendChild(btn);
             });
-        }
 
-        // View Code Modal
-        function viewCode(filePath) {
-            const file = filesCatalog.find(f => f.path === filePath);
-            if (file) {
-                document.getElementById("modal-filename").innerText = filePath;
-                document.getElementById("modal-body").innerText = file.code + '\n\n# ... [Full Code Available via Download Action]';
-                document.getElementById("code-modal").style.display = "flex";
+            // Initialize first file load
+            if (filesCatalog.length > 0) {
+                selectFile(filesCatalog[0]);
             }
         }
 
-        function closeCodeModal() {
-            document.getElementById("code-modal").style.display = "none";
+        // Handle File Selection (Updates right column viewer)
+        function selectFile(file, element = null) {
+            if (element) {
+                const buttons = document.querySelectorAll(".file-btn");
+                buttons.forEach(btn => btn.classList.remove("active"));
+                element.classList.add("active");
+            }
+            
+            document.getElementById("current-filename").innerText = file.path;
+            document.getElementById("current-relationship").innerHTML = `<strong>Ecosystem Relationship:</strong> ${file.relation}`;
+            document.getElementById("code-display").innerText = file.code + `\n\n# ... [Full Code file available via the Download action above]`;
+            
+            // Update download button
+            const downloadBtn = document.getElementById("btn-download");
+            downloadBtn.href = file.download;
+            downloadBtn.setAttribute('download', file.path.split('/').pop());
+        }
+
+        // Copy Current Code
+        function copyCurrentCode() {
+            const codeText = document.getElementById("code-display").innerText;
+            navigator.clipboard.writeText(codeText).then(() => {
+                const alertPopup = document.getElementById("alert-popup");
+                alertPopup.classList.add("show");
+                setTimeout(() => {
+                    alertPopup.classList.remove("show");
+                }, 2000);
+            });
         }
 
         // Diagnostics Simulator
@@ -864,7 +862,7 @@
 
         // Init
         document.addEventListener("DOMContentLoaded", () => {
-            loadCatalog();
+            loadExplorer();
         });
     </script>
 </body>
