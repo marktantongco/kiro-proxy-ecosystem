@@ -828,9 +828,11 @@ fi
 if ss -tulpn | grep -q ":60000 "; then
     ok "OWL Forward Proxy is bound to port 60000."
     # Check if run manually or by systemd
-    if ps aux | grep "forward_proxy.py" | grep -qv "systemd" && ps aux | grep "forward_proxy.py" | grep -q "python"; then
-        PID=\$(pgrep -f "forward_proxy.py" | head -n1 || true)
-        if [[ -n "\$PID" ]]; then
+    PID=\$(pgrep -f "forward_proxy.py" | head -n1 || true)
+    if [[ -n "\$PID" ]]; then
+        PARENT_PID=\$(ps -p "\$PID" -o ppid= | tr -d ' ' || true)
+        PARENT_COMM=\$(ps -o comm= -p "\$PARENT_PID" 2>/dev/null | tr -d ' ' || true)
+        if [[ "\$PARENT_COMM" != "systemd" ]]; then
             warn "OWL Forward Proxy process (PID \$PID) appears to be running manually!"
         fi
     fi
@@ -846,8 +848,9 @@ if ss -tulpn | grep -q ":8333 "; then
     if [[ -n "\$PID" ]]; then
         # Check if the parent is systemd or manual
         PARENT_PID=\$(ps -p "\$PID" -o ppid= | tr -d ' ' || true)
-        if [[ "\$PARENT_PID" != "1" && "\$PARENT_PID" != "" ]]; then
-            warn "Duplicate manual Kiro Gateway detected! (PID: \$PID, Parent PPID: \$PARENT_PID)"
+        PARENT_COMM=\$(ps -o comm= -p "\$PARENT_PID" 2>/dev/null | tr -d ' ' || true)
+        if [[ "\$PARENT_COMM" != "systemd" ]]; then
+            warn "Duplicate manual Kiro Gateway detected! (PID: \$PID, Parent COMM: \$PARENT_COMM)"
             info "Killing manual process (PID \$PID) to allow clean systemd service control..."
             kill -9 "\$PID" || true
             ok "Duplicate process terminated."
@@ -937,7 +940,7 @@ fi
 # ═══════════════════════════════════════════════════════════════════════════
 step "5" "Running End-to-End Active Connection Check..."
 
-if curl -sf -I -x http://127.0.0.1:60000 https://api.github.com/users/octocat >/dev/null 2>&1; then
+if curl -sf -I -x http://127.0.0.1:60000 https://www.google.com >/dev/null 2>&1; then
     ok "Active check: HTTP tunnel through OWL Proxy -> Clash -> Outside World is fully OPERATIONAL!"
 else
     err "Active check: HTTP tunnel failed! Check your Clash (mihomo) connection."
