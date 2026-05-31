@@ -1,0 +1,54 @@
+# 🦉 Kiro Proxy Ecosystem — GitHub Pages Deploy
+# NOTE: To push this file, the GITHUB_TOKEN needs the 'workflow' scope.
+# Run: gh auth refresh --hostname github.com -s workflow
+# Then complete the device flow in your browser.
+#
+# The site auto-deploys from master branch without this workflow.
+# This workflow is optional — it adds CI compile verification + manual trigger.
+
+name: deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile site
+        run: python3 compile_site.py
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
