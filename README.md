@@ -159,5 +159,37 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 
 ---
 
-*Maintained under GitHub pages for marktantongco.*
+---
+
+## 🚢 6. Deploy & Release
+
+This site auto-deploys to **GitHub Pages** from the `master` branch root.
+
+### Quick Deploy
+```bash
+# Compile site, commit, and push in one step:
+bash scripts/deploy.sh
+```
+
+### Manual Steps
+```bash
+# 1. Compile (embeds all script contents into index.html / mobile.html)
+python3 compile_site.py
+
+# 2. Commit and push (triggers auto-deploy)
+git add -A
+git commit -m "feat: description"
+git push origin master
+```
+
+### GitHub Actions
+A CI workflow (`.github/workflows/deploy.yml`) also compiles and deploys automatically on every push to `master`. You can also trigger it manually from the Actions tab.
+
+### URLs
+- **Desktop Console**: https://marktantongco.github.io/kiro-proxy-ecosystem/
+- **Mobile Console**: https://marktantongco.github.io/kiro-proxy-ecosystem/mobile.html
+
+---
+
+*Maintained under GitHub Pages for marktantongco.*
 
