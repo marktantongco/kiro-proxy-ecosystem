@@ -517,6 +517,15 @@
             }
         }
     </style>
+    <script>
+        // Automatic Mobile Redirection with override parameter check
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('desktop') !== 'true' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                window.location.replace("mobile.html");
+            }
+        })();
+    </script>
 </head>
 <body>
 

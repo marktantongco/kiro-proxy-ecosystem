@@ -4,11 +4,14 @@
 
 ### 🌐 Connected Portals & Integrations
 * **Interactive Web Platform (Desktop)**: 🔗 [Ecosystem Desktop Console](https://marktantongco.github.io/kiro-proxy-ecosystem/index.html) — *The live operational dashboard, procedural walkthroughs, and secure code/script downloader.*
-* **Mobile Interactive Console**: 🔗 [Ecosystem Mobile Console](https://marktantongco.github.io/kiro-proxy-ecosystem/mobile.html) — *Premium mobile-first gallery-airy dashboard designed to Stitch Taste Standard for diagnostic triage on the go.*
+* **Mobile Interactive Console**: 🔗 [Ecosystem Mobile Console](https://marktantongco.github.io/kiro-proxy-ecosystem/mobile.html) — *High-contrast Neo-Brutalist mobile dashboard designed with stark Red-Black-Blue UI elements for extreme outdoor visibility during triage.*
 * **AWS Builder ID Portal**: 🔗 [AWS SSO Console](https://builderid.us-east-1.console.aws.amazon.com) — *Builder ID endpoint for Kiro token refresh sequences.*
 * **Upstream Geo-Routing (Mihomo Core)**: 🔗 [Mihomo Core GitHub](https://github.com/MetaCubeX/mihomo) — *The core routing backbone listening on port `7890`.*
 * **Webshare Proxy Backbone**: 🔗 [Webshare Dashboard](https://www.webshare.io/) — *Provider backbone for rotating IP definitions.*
 * **Anthropic SDK Integration**: 🔗 [Anthropic API Documentation](https://docs.anthropic.com/) — *API standard mapped inside `kiro-gateway` translation pipelines.*
+
+> [!NOTE]
+> **Mobile Redirection Protocol**: The main entrypoint ([`index.html`](https://marktantongco.github.io/kiro-proxy-ecosystem/index.html)) automatically detects mobile viewports and redirects to the Neo-Brutalist [`mobile.html`](https://marktantongco.github.io/kiro-proxy-ecosystem/mobile.html) console. Users can override this behavior by loading the site with `?desktop=true` or by clicking the *Desktop Suite* button on the mobile UI.
 
 ---
 
