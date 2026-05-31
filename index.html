@@ -27,6 +27,39 @@
             --font-mono: 'Space Mono', monospace;
         }
 
+        /* Responsive Light Theme Overrides */
+        body.light-theme {
+            --bg-deep: #F9FAFB;
+            --bg-card: #FFFFFF;
+            --bg-hover: #F3F4F6;
+            --color-primary: #2563EB;
+            --color-secondary: #1D4ED8;
+            --color-text-main: #4B5563;
+            --color-text-light: #111827;
+            --border-glow: rgba(37, 99, 235, 0.08);
+            border-color: rgba(226, 232, 240, 0.8) !important;
+        }
+
+        body.light-theme .card,
+        body.light-theme header,
+        body.light-theme .tab-btn {
+            border-color: rgba(226, 232, 240, 0.8) !important;
+        }
+
+        body.light-theme .flow-node {
+            fill: #FFFFFF;
+            stroke: rgba(37, 99, 235, 0.4);
+        }
+
+        body.light-theme .flow-node:hover {
+            stroke: var(--color-primary);
+            filter: drop-shadow(0px 0px 8px rgba(37, 99, 235, 0.4));
+        }
+
+        body.light-theme .code-explorer {
+            border-color: rgba(226, 232, 240, 0.8) !important;
+        }
+
         /* Reset & Base Styles */
         * {
             box-sizing: border-box;
@@ -518,11 +551,26 @@
         }
     </style>
     <script>
-        // Automatic Mobile Redirection with override parameter check
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            document.getElementById('theme-toggle').textContent = isLight ? '🌙 Dark Mode' : '☀️ Light Mode';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        // Automatic Mobile Redirection and Theme Initialization
         (function() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('desktop') !== 'true' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
                 window.location.replace("mobile.html");
+                return;
+            }
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-theme');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.getElementById('theme-toggle');
+                    if (btn) btn.textContent = '🌙 Dark Mode';
+                });
             }
         })();
     </script>
@@ -535,7 +583,10 @@
             <span class="logo-icon">🦉</span>
             <span class="logo-text">Kiro-OWL Stack</span>
         </div>
-        <div class="badge">Ecosystem Manual</div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="theme-toggle" class="tab-btn" onclick="toggleTheme()" style="padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.8rem; border-color: rgba(255,255,255,0.1); background: transparent; cursor: pointer; color: var(--color-primary); font-family: var(--font-display); font-weight: 600; outline: none; transition: all 0.2s;">☀️ Light Mode</button>
+            <div class="badge">Ecosystem Manual</div>
+        </div>
     </header>
 
     <div class="container">

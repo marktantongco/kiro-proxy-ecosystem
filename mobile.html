@@ -31,6 +31,45 @@
             --transition-snap: all 0.15s steps(4, end);
         }
 
+        /* Responsive Neo-Brutalist Light Theme Overrides */
+        body.light-theme {
+            --brutal-bg: #FFFFFF;
+            --brutal-surface: #F3F4F6;
+            --brutal-white: #000000;
+            --brutal-red: #FF2E2E;
+            --brutal-yellow: #FFD200;
+            --brutal-secondary: #4B5563;
+        }
+
+        body.light-theme .brutal-badge {
+            color: var(--brutal-white);
+        }
+
+        body.light-theme .nav-item {
+            color: var(--brutal-secondary);
+        }
+
+        body.light-theme .nav-item.active {
+            color: var(--brutal-white);
+            background: var(--brutal-yellow);
+            box-shadow: 2px 2px 0px var(--brutal-white);
+        }
+
+        body.light-theme .nav-dock {
+            background: rgba(243, 244, 246, 0.95);
+        }
+
+        body.light-theme .list-item:active {
+            color: var(--brutal-white);
+        }
+
+        body.light-theme .list-item:active .item-category,
+        body.light-theme .list-item:active .item-title,
+        body.light-theme .list-item:active .item-desc,
+        body.light-theme .list-item:active .chevron {
+            color: var(--brutal-white) !important;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -520,6 +559,25 @@
         .t-white { color: var(--brutal-white); }
         .t-yellow { color: var(--brutal-red); }
     </style>
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            document.getElementById('theme-toggle').textContent = isLight ? '🌙 Dark' : '☀️ Light';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+        
+        // Initialize Theme from localStorage
+        (function() {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-theme');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.getElementById('theme-toggle');
+                    if (btn) btn.textContent = '🌙 Dark';
+                });
+            }
+        })();
+    </script>
 </head>
 <body>
 
@@ -530,6 +588,7 @@
     <header>
         <div class="header-logo">OWL <span>Brutal</span></div>
         <div class="header-controls">
+            <button id="theme-toggle" class="brutal-badge red" onclick="toggleTheme()" style="cursor: pointer; outline: none;">☀️ Light</button>
             <a href="index.html?desktop=true" class="brutal-badge yellow">Desktop Suite</a>
             <div class="brutal-badge red">v3.2</div>
         </div>
