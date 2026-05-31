@@ -30,6 +30,7 @@ The following domains are explicitly bypassed inside `/home/x1/.owl-agent/forwar
 1. `localhost`, `127.0.0.1`, `::1` (Loopback services)
 2. `integrate.api.nvidia.com` & `*.nvidia.com` (NVIDIA NIM APIs / DeepSeek V4)
 3. `opencode.ai` & `*.opencode.ai` (OpenCode Zen model endpoints)
+4. `*.amazonaws.com` & `*.kiro.dev` (Kiro/AWS Q backend APIs — SSL_ERROR_SYSCALL without direct connect)
 
 ### Code Patches in `forward_proxy.py`
 

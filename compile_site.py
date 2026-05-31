@@ -65,7 +65,7 @@ files_to_compile = [
     {
         "path": "configs/README_PROXY_ARCHITECTURE.md",
         "category": "Documentation",
-        "relation": "Comprehensive proxy bypass routing architecture manual for NVIDIA NIM and OpenCode Zen model providers."
+        "relation": "Comprehensive proxy bypass routing architecture manual for NVIDIA NIM, OpenCode Zen, and Kiro/AWS Q backend model providers."
     },
     {
         "path": "systemd/kiro-gateway.service",

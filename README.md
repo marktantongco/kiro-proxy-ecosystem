@@ -146,6 +146,11 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 * **Resilient MCP Bridging**: Fully configured the `owl-resilient-http` MCP server into OpenCode settings to ensure high-uptime failover translation of semantic searches.
 * **Ecosystem Integrity**: Integrated advanced user-level systemd process verification inside `validate_ecosystem.sh` to resolve process tracking false-positives under UID mapping limits.
 
+### May 31, 2026 (Late): Kiro-Gateway Proxy Bypass Fix & SSL Error Resolution
+* **Kiro Backend Unreachable (SSL_ERROR_SYSCALL)**: The Kiro Gateway's connection to `q.us-east-1.amazonaws.com` was failing because the OWL forward proxy routed it through Mihomo/Clash, which caused TLS handshake drops after establishing the CONNECT tunnel. Traffic timed out with 0 upstream models loaded.
+* **The Resolution**: Added `*.amazonaws.com` and `*.kiro.dev` to the OWL forward proxy's direct-connect bypass list in both the TCP tunnel (`connect_upstream`) and HTTP handler (`handle_http`) routines. These domains now bypass Mihomo entirely and connect directly, restoring the Kiro gateway's ability to authenticate with Amazon Q and load its full 9-model catalog (auto-kiro, claude-haiku-4.5, claude-sonnet-4, claude-sonnet-4.5, deepseek-3.2, glm-5, minimax-m2.1, minimax-m2.5, qwen3-coder-next).
+* **Documentation Updated**: Proxy architecture guide (`configs/README_PROXY_ARCHITECTURE.md`) updated with the new bypass entries and technical explanation of the SSL_ERROR_SYSCALL root cause.
+
 ### May 31, 2026: Installer Upgrades, Self-Healing Diagnostics & Alias Integration
 * **Advanced Proxy Defense (v3.2)**: Upgraded `install_owl_agent.sh` to provision the robust `proxy_defense_fixed_v3.py` script containing weighted proxy selection, per-domain rate limiting, a domain circuit breaker, and automatic multi-provider credentials/auth injection.
 * **Inline Diagnostics Suite**: Integrated the secure `diagnose_opencode.sh` self-healing script inline inside the core OWL-Agent installer (`install_owl_agent.sh`), deploying it natively to `~/.owl-agent/diagnose_opencode.sh`.

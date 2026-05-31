@@ -4666,7 +4666,7 @@ echo -e "\${BLUE}\${BOLD}=======================================================
     {
         path: "configs/README_PROXY_ARCHITECTURE.md",
         category: "Documentation",
-        relation: "Comprehensive proxy bypass routing architecture manual for NVIDIA NIM and OpenCode Zen model providers.",
+        relation: "Comprehensive proxy bypass routing architecture manual for NVIDIA NIM, OpenCode Zen, and Kiro/AWS Q backend model providers.",
         download: "https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/configs/README_PROXY_ARCHITECTURE.md",
         code: `# 🦉 OWL-AGENT & OpenCode Proxy Architecture Design & Troubleshooting Guide
 
@@ -4700,6 +4700,7 @@ The following domains are explicitly bypassed inside \`/home/x1/.owl-agent/forwa
 1. \`localhost\`, \`127.0.0.1\`, \`::1\` (Loopback services)
 2. \`integrate.api.nvidia.com\` & \`*.nvidia.com\` (NVIDIA NIM APIs / DeepSeek V4)
 3. \`opencode.ai\` & \`*.opencode.ai\` (OpenCode Zen model endpoints)
+4. \`*.amazonaws.com\` & \`*.kiro.dev\` (Kiro/AWS Q backend APIs — SSL_ERROR_SYSCALL without direct connect)
 
 ### Code Patches in \`forward_proxy.py\`
 
