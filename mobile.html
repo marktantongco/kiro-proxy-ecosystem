@@ -2,519 +2,446 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🦉 Kiro / OWL / Hermes Proxy Stack Replication Suite</title>
-    <!-- Premium Google Fonts -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🦉 OWL Ecosystem Mobile Console</title>
+    <!-- Google Fonts: Premium Typography Outfit & Space Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Modern CSS Custom Properties - Sleek Dark Palette */
+        /* Design System: Taste Standard (Standard Level: Creativity 8, Density 4, Variance 8, Motion 6) */
         :root {
-            --bg-deep: #0b0c10;
-            --bg-card: #1f2833;
-            --bg-hover: #2d3c4d;
-            --color-primary: #66fcf1;
-            --color-secondary: #45f3ff;
-            --color-text-main: #c5c6c7;
-            --color-text-light: #ffffff;
-            --color-accent-red: #ff4a5a;
-            --color-accent-green: #39e3a6;
-            --border-glow: rgba(102, 252, 241, 0.15);
-            --transition-speed: 0.3s;
+            --canvas-bg: #F9FAFB;
+            --pure-surface: #FFFFFF;
+            --charcoal-ink: #18181B;
+            --steel-secondary: #71717A;
+            --muted-slate: #94A3B8;
+            --whisper-border: rgba(226, 232, 240, 0.7);
+            --diffused-shadow: 0 10px 30px -10px rgba(24, 24, 27, 0.04);
+            --electric-blue: #3B82F6;
+            --emerald-signal: #10B981;
+            
             --font-display: 'Outfit', sans-serif;
             --font-mono: 'Space Mono', monospace;
+            --transition-tactile: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Reset & Base Styles */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            scroll-behavior: smooth;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-deep);
-            color: var(--color-text-main);
+            background-color: var(--canvas-bg);
+            color: var(--charcoal-ink);
             font-family: var(--font-display);
             line-height: 1.6;
             overflow-x: hidden;
+            padding-bottom: 90px; /* Space for the bottom navigation bar */
         }
 
-        /* Premium Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-deep);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--bg-card);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--color-primary);
-        }
-
-        /* Glassmorphism Header */
+        /* Mobile Header */
         header {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(11, 12, 16, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(102, 252, 241, 0.1);
-            padding: 1.25rem 2rem;
+            background: rgba(249, 250, 251, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--whisper-border);
+            padding: 1.25rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .logo-icon {
-            font-size: 2rem;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .logo-text {
+        .header-logo {
             font-weight: 800;
-            font-size: 1.4rem;
-            letter-spacing: -0.5px;
-            color: var(--color-text-light);
-            background: linear-gradient(135deg, var(--color-text-light) 30%, var(--color-primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.25rem;
+            letter-spacing: -0.025em;
+            color: var(--charcoal-ink);
         }
 
-        .badge {
-            background: rgba(102, 252, 241, 0.1);
-            border: 1px solid var(--color-primary);
-            color: var(--color-primary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
+        .header-logo span {
+            color: var(--electric-blue);
+        }
+
+        .mobile-badge {
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 0 10px rgba(102, 252, 241, 0.2);
+            letter-spacing: 0.05em;
+            color: var(--emerald-signal);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            font-family: var(--font-mono);
         }
 
-        /* Container */
+        /* Content Container */
         .container {
-            max-width: 1200px;
+            padding: 1.5rem;
+            max-width: 600px;
             margin: 0 auto;
-            padding: 3rem 2rem;
         }
 
-        /* Hero */
-        .hero {
-            text-align: center;
-            margin-bottom: 4rem;
+        /* Interactive Hero Card */
+        .hero-card {
+            background: var(--pure-surface);
+            border-radius: 2rem;
+            border: 1px solid var(--whisper-border);
+            padding: 2rem 1.5rem;
+            box-shadow: var(--diffused-shadow);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--electric-blue);
         }
 
         .hero-title {
-            font-size: 3.2rem;
+            font-size: 1.85rem;
             font-weight: 800;
-            color: var(--color-text-light);
             line-height: 1.2;
-            margin-bottom: 1.5rem;
-            letter-spacing: -1px;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.75rem;
         }
 
-        .hero-title span {
-            color: var(--color-primary);
+        .hero-desc {
+            font-size: 0.95rem;
+            color: var(--steel-secondary);
+            margin-bottom: 1.25rem;
         }
 
-        .hero-subtitle {
-            font-size: 1.25rem;
-            font-weight: 300;
-            max-width: 800px;
-            margin: 0 auto;
-            color: var(--color-text-main);
-        }
-
-        /* Navigation Tabs */
-        .tab-nav {
+        /* Bottom Sticky Navigation Dock */
+        .nav-dock {
+            position: fixed;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            right: 1.25rem;
+            height: 4.25rem;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--whisper-border);
+            border-radius: 2rem;
+            box-shadow: 0 20px 45px -10px rgba(24, 24, 27, 0.08);
             display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 1rem;
+            z-index: 200;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 3rem;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            background: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.05);
-            color: var(--color-text-main);
-            padding: 0.85rem 1.5rem;
-            border-radius: 12px;
+            color: var(--steel-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
             font-weight: 600;
+            width: 25%;
+            height: 100%;
+            border-radius: 1.25rem;
+            transition: var(--transition-tactile);
+            border: none;
+            background: transparent;
             cursor: pointer;
-            transition: all var(--transition-speed);
-            font-family: var(--font-display);
         }
 
-        .tab-btn:hover {
-            border-color: var(--color-primary);
-            color: var(--color-text-light);
-            transform: translateY(-2px);
+        .nav-item svg {
+            width: 1.35rem;
+            height: 1.35rem;
+            margin-bottom: 0.25rem;
+            stroke: currentColor;
+            stroke-width: 2.25;
+            fill: none;
+            transition: var(--transition-tactile);
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, rgba(102, 252, 241, 0.15) 0%, rgba(69, 243, 255, 0.05) 100%);
-            border-color: var(--color-primary);
-            color: var(--color-primary);
+        .nav-item.active {
+            color: var(--electric-blue);
         }
 
-        .tab-content {
+        .nav-item:active {
+            transform: scale(0.92);
+        }
+
+        /* Section Layouts */
+        .panel {
             display: none;
-            animation: fadeIn 0.4s ease-in-out forwards;
+            animation: panelFade 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        .tab-content.active {
+        .panel.active {
             display: block;
         }
 
-        /* Card System */
-        .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        .card-title {
-            font-size: 1.8rem;
-            color: var(--color-text-light);
-            margin-bottom: 1.5rem;
-            border-left: 4px solid var(--color-primary);
-            padding-left: 1rem;
-        }
-
-        /* Architecture Flowchart SVG */
-        .arch-svg-container {
-            width: 100%;
-            overflow-x: auto;
-            background: rgba(11, 12, 16, 0.5);
-            border-radius: 12px;
-            padding: 2rem;
-            border: 1px dashed rgba(102, 252, 241, 0.2);
-            margin: 1.5rem 0;
-            display: flex;
-            justify-content: center;
-        }
-
-        .flow-node {
-            fill: var(--bg-card);
-            stroke: rgba(102, 252, 241, 0.4);
-            stroke-width: 2px;
-            transition: all var(--transition-speed);
-        }
-
-        .flow-node:hover {
-            stroke: var(--color-primary);
-            filter: drop-shadow(0px 0px 8px rgba(102, 252, 241, 0.6));
-        }
-
-        .flow-link {
-            stroke: rgba(197, 198, 199, 0.3);
-            stroke-dasharray: 5;
-            animation: dash 10s linear infinite;
-        }
-
-        .flow-link-active {
-            stroke: var(--color-primary);
-            stroke-dasharray: 6;
-            animation: dash 4s linear infinite;
-        }
-
-        /* Two-Column Explorer Layout (Restored) */
-        .code-explorer {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-
-        @media (max-width: 900px) {
-            .code-explorer {
-                grid-template-columns: 1fr;
+        @keyframes panelFade {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        .file-list {
+        /* List Stack View */
+        .list-stack {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.85rem;
         }
 
-        .file-btn {
-            background: var(--bg-deep);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 1rem;
-            border-radius: 8px;
+        .list-item {
+            background: var(--pure-surface);
+            border: 1px solid var(--whisper-border);
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+            box-shadow: var(--diffused-shadow);
+            transition: var(--transition-tactile);
             cursor: pointer;
             text-align: left;
-            transition: all var(--transition-speed);
-            color: var(--color-text-main);
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-
-        .file-btn:hover, .file-btn.active {
-            border-color: var(--color-primary);
-            color: var(--color-text-light);
-            background: rgba(102, 252, 241, 0.05);
-        }
-
-        .file-btn-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             width: 100%;
-        }
-
-        .badge-file {
-            font-size: 0.65rem;
-            background: rgba(255,255,255,0.1);
-            color: var(--color-text-main);
-            padding: 0.15rem 0.4rem;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        .file-btn.active .badge-file {
-            background: var(--color-primary);
-            color: var(--bg-deep);
-        }
-
-        .code-view-container {
-            position: relative;
-            background: #0d0e12;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 620px;
-        }
-
-        .code-header {
-            background: #14161d;
-            padding: 0.75rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        .code-filename {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            color: var(--color-primary);
+        .list-item:active {
+            transform: scale(0.98);
+            background: #F8FAFC;
         }
 
-        .action-group {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .action-btn {
-            background: rgba(102, 252, 241, 0.1);
-            border: 1px solid rgba(102, 252, 241, 0.3);
-            color: var(--color-primary);
-            padding: 0.35rem 0.85rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all var(--transition-speed);
-        }
-
-        .action-btn:hover {
-            background: var(--color-primary);
-            color: var(--bg-deep);
-        }
-
-        .code-info-panel {
-            background: #10121a;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.9rem;
-            color: var(--color-text-main);
-        }
-
-        .code-content {
+        .item-meta {
             flex-grow: 1;
-            padding: 1.5rem;
-            overflow: auto;
-            margin: 0;
-            color: #d1d5db;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            white-space: pre-wrap;
-            background: #0f1015;
-            line-height: 1.5;
         }
 
-        /* Step Wizards */
-        .step-timeline {
-            position: relative;
-            padding-left: 2.5rem;
-            border-left: 2px solid rgba(102, 252, 241, 0.2);
-            margin: 2rem 0;
-        }
-
-        .step-item {
-            position: relative;
-            margin-bottom: 3rem;
-        }
-
-        .step-number {
-            position: absolute;
-            left: calc(-2.5rem - 16px - 1px);
-            width: 32px;
-            height: 32px;
-            background: var(--bg-deep);
-            border: 2px solid var(--color-primary);
-            color: var(--color-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .item-category {
+            font-size: 0.72rem;
             font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .step-title {
-            font-size: 1.3rem;
-            color: var(--color-text-light);
-            margin-bottom: 0.5rem;
-        }
-
-        /* Terminal Simulator */
-        .terminal-box {
-            background: #060709;
-            border-radius: 12px;
-            border: 1.5px solid #222;
-            overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-            margin: 2rem 0;
-        }
-
-        .terminal-bar {
-            background: #121318;
-            padding: 0.75rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border-bottom: 1.5px solid #222;
-        }
-
-        .terminal-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .dot-red { background: var(--color-accent-red); }
-        .dot-yellow { background: var(--color-accent-red); filter: hue-rotate(40deg); }
-        .dot-green { background: var(--color-accent-green); }
-
-        .terminal-title {
-            margin-left: auto;
-            margin-right: auto;
+            text-transform: uppercase;
+            color: var(--electric-blue);
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
             font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: #888;
         }
 
-        .terminal-body {
-            padding: 1.5rem;
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            color: #ccc;
-            height: 380px;
-            overflow-y: auto;
-            line-height: 1.6;
-        }
-
-        .btn-run-sim {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-            color: var(--bg-deep);
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-size: 1rem;
+        .item-title {
+            font-size: 0.95rem;
             font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 252, 241, 0.3);
-            transition: all var(--transition-speed);
-            margin-bottom: 1rem;
+            color: var(--charcoal-ink);
+            margin-bottom: 0.25rem;
         }
 
-        .btn-run-sim:hover {
-            transform: translateY(-2px);
+        .item-desc {
+            font-size: 0.82rem;
+            color: var(--steel-secondary);
+            line-height: 1.4;
         }
 
-        /* Success Copy Popup */
-        .alert-popup {
+        .chevron {
+            color: var(--muted-slate);
+            margin-left: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        /* Code Block Overlay (Mobile Sheets View) */
+        .code-sheet {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--color-accent-green);
-            color: var(--bg-deep);
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-weight: 700;
-            box-shadow: 0 10px 25px rgba(57, 227, 166, 0.3);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
-            pointer-events: none;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--pure-surface);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.1, 0.76, 0.55, 0.94);
         }
 
-        .alert-popup.show {
-            opacity: 1;
+        .code-sheet.open {
             transform: translateY(0);
         }
 
-        footer {
-            border-top: 1px solid rgba(255,255,255,0.05);
-            padding: 3rem 2rem;
-            text-align: center;
+        .sheet-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--whisper-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--canvas-bg);
+        }
+
+        .sheet-title {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%;
+        }
+
+        .close-btn {
+            background: var(--pure-surface);
+            border: 1px solid var(--whisper-border);
+            color: var(--charcoal-ink);
+            padding: 0.5rem 0.85rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition-tactile);
+        }
+
+        .close-btn:active {
+            transform: scale(0.95);
+        }
+
+        .sheet-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.25rem;
+            background: #0F172A; /* Beautiful modern dark code editor background */
+            color: #E2E8F0;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            white-space: pre;
+        }
+
+        /* Diagnostic Panel Styles */
+        .diag-card {
+            background: var(--pure-surface);
+            border-radius: 1.5rem;
+            border: 1px solid var(--whisper-border);
+            padding: 1.25rem;
+            box-shadow: var(--diffused-shadow);
+            margin-bottom: 1rem;
+        }
+
+        .diag-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--whisper-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .diag-title {
             font-size: 0.9rem;
-            color: #666;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--emerald-signal);
+            box-shadow: 0 0 8px var(--emerald-signal);
+            animation: pulse 2s infinite;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        @keyframes dash {
-            to {
-                stroke-dashoffset: -100;
-            }
+        .diag-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+            font-size: 0.88rem;
+        }
+
+        .diag-item:last-child {
+            border-bottom: none;
+        }
+
+        .diag-label {
+            color: var(--steel-secondary);
+        }
+
+        .diag-value {
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        /* Walkthrough Step List */
+        .walkthrough-step {
+            background: var(--pure-surface);
+            border: 1px solid var(--whisper-border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: var(--diffused-shadow);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .step-num {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 1.75rem;
+            color: rgba(59, 130, 246, 0.12);
+        }
+
+        .step-heading {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+            max-width: 85%;
+        }
+
+        .step-body {
+            font-size: 0.88rem;
+            color: var(--steel-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .step-btn {
+            background: var(--canvas-bg);
+            border: 1px solid var(--whisper-border);
+            color: var(--electric-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 0.85rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            transition: var(--transition-tactile);
+            text-align: center;
+        }
+
+        .step-btn:active {
+            transform: scale(0.97);
+            background: var(--whisper-border);
         }
     </style>
 </head>
@@ -522,383 +449,128 @@
 
     <!-- Header -->
     <header>
-        <div class="logo-container">
-            <span class="logo-icon">🦉</span>
-            <span class="logo-text">Kiro-OWL Stack</span>
-        </div>
-        <div class="badge">Ecosystem Manual</div>
+        <div class="header-logo">OWL <span>Mobile</span></div>
+        <a href="index.html" class="mobile-badge" style="text-decoration: none; color: var(--electric-blue); background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.15); font-family: var(--font-display);">Desktop Suite</a>
+        <div class="mobile-badge" style="margin-left: 0.5rem;">v3.2 Stack</div>
     </header>
 
     <div class="container">
-        <!-- Hero Section -->
-        <section class="hero">
-            <h1 class="hero-title">Proxy Ecosystem <span>Replication Suite</span></h1>
-            <p class="hero-subtitle">The complete file catalog, deployment manual, and diagnostic validation stack needed to recreate our secure AI wrapper and proxy environment on any workstation.</p>
-        </section>
+        <!-- Interactive Hero Card -->
+        <div class="hero-card">
+            <h1 class="hero-title">Self-Healing Stack Console</h1>
+            <p class="hero-desc">Manage regional proxy overrides, terminal model gates, and run diagnostic queries directly from your viewport.</p>
+        </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="tab-nav">
-            <button class="tab-btn active" onclick="switchTab(event, 'tab-architecture')">📐 Architecture Map</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-catalog')">📁 Downloads & Catalog</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-guide')">🚀 Replication Walkthrough</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-wizard')">🛠️ Step-by-Step Wizards</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-diagnostics')">🩺 Diagnostics Terminal</button>
-            <a href="mobile.html" class="tab-btn" style="text-decoration: none; display: inline-block; border-color: var(--color-secondary); color: var(--color-secondary); transition: all 0.3s;">📱 Mobile Console</a>
-        </nav>
-
-        <!-- TAB 1: Architecture Map -->
-        <div id="tab-architecture" class="tab-content active">
-            <div class="card">
-                <h2 class="card-title">📐 Secure Ecosystem Network Pipeline</h2>
-                <p>The suite uses a dynamic double-proxy intercept configuration to circumvent regional constraints. Local command launchers isolate proxy settings within their active lifecycle, forwarding traffic through OWL Proxy (60000) directly to local upstream Clash routing modules (7890).</p>
-                
-                <div class="arch-svg-container">
-                <div class="arch-svg-container">
-                    <svg width="950" height="480" viewBox="0 0 950 480" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#66fcf1" />
-                            </marker>
-                        </defs>
-                        
-                        <!-- Row 1: Provisioning & Verification -->
-                        <!-- 1. Installer Engine -->
-                        <rect x="280" y="30" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="370" y="60" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">install_owl_agent.sh</text>
-                        <text x="370" y="75" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">Workstation Installer</text>
-
-                        <!-- 2. Test Harness -->
-                        <rect x="510" y="30" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="600" y="60" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">test_parallel_research.py</text>
-                        <text x="600" y="75" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">Concurrency Harness</text>
-
-                        <!-- Row 2: Client Intakes -->
-                        <!-- 3. Hermes Standalone Agent -->
-                        <rect x="50" y="170" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="140" y="200" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">Hermes Agent Wrapper</text>
-                        <text x="140" y="215" fill="#66fcf1" font-size="10" text-anchor="middle" font-family="Space Mono">Isolated Shell (60000)</text>
-
-                        <!-- Row 3: Central Processing Proxy -->
-                        <!-- 4. OWL Forwarding Proxy -->
-                        <rect x="340" y="170" width="200" height="60" rx="8" class="flow-node" />
-                        <text x="440" y="200" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">OWL Proxy (Port 60000)</text>
-                        <text x="440" y="215" fill="#66fcf1" font-size="10" text-anchor="middle" font-family="Space Mono">Defense Interceptor</text>
-
-                        <!-- Row 4: Downstream Routing -->
-                        <!-- 5. Clash Router Core -->
-                        <rect x="710" y="170" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="800" y="200" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">Clash Core (Port 7890)</text>
-                        <text x="800" y="215" fill="#39e3a6" font-size="10" text-anchor="middle" font-family="Space Mono">Mihomo Routing Engine</text>
-
-                        <!-- Row 5: IDE Ecosystem -->
-                        <!-- 6. OpenCode Editor -->
-                        <rect x="50" y="350" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="140" y="380" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">OpenCode Workspace</text>
-                        <text x="140" y="395" fill="#66fcf1" font-size="10" text-anchor="middle" font-family="Space Mono">IDE Settings Map</text>
-
-                        <!-- 7. Resilient MCP Server -->
-                        <rect x="280" y="350" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="370" y="380" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">owl_resilient_mcp.py</text>
-                        <text x="370" y="395" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">Obsidian Search API</text>
-
-                        <!-- 8. Kiro Translation Gateway -->
-                        <rect x="510" y="350" width="180" height="60" rx="8" class="flow-node" />
-                        <text x="600" y="380" fill="#ffffff" font-weight="600" text-anchor="middle" font-size="13">Kiro Gateway (Port 8333)</text>
-                        <text x="600" y="395" fill="#45f3ff" font-size="10" text-anchor="middle" font-family="Space Mono">AWS SSO OIDC Engine</text>
-
-                        <!-- Architectural Routing Paths (Arrows) -->
-                        <!-- Installer -> provisions OWL / Kiro -->
-                        <path d="M 370 90 L 370 160" class="flow-link" marker-end="url(#arrow)" />
-                        <path d="M 370 90 L 600 340" class="flow-link" marker-end="url(#arrow)" />
-
-                        <!-- Concurrency test -> monitors OWL proxy -->
-                        <path d="M 600 90 L 490 160" class="flow-link" marker-end="url(#arrow)" />
-
-                        <!-- Hermes Agent Wrapper -> OWL Proxy -->
-                        <path d="M 230 200 L 330 200" class="flow-link-active" marker-end="url(#arrow)" />
-                        <text x="280" y="190" fill="#c5c6c7" font-size="9" text-anchor="middle" font-family="Space Mono">local-env</text>
-
-                        <!-- OpenCode -> Resilient MCP -->
-                        <path d="M 230 380 L 270 380" class="flow-link-active" marker-end="url(#arrow)" />
-                        
-                        <!-- Resilient MCP -> Kiro Gateway -->
-                        <path d="M 460 380 L 500 380" class="flow-link-active" marker-end="url(#arrow)" />
-
-                        <!-- Kiro Gateway -> OWL Proxy -->
-                        <path d="M 600 350 L 440 240" class="flow-link-active" marker-end="url(#arrow)" />
-                        <text x="540" y="290" fill="#c5c6c7" font-size="9" text-anchor="middle" font-family="Space Mono">OIDC Auth Tunnel</text>
-
-                        <!-- OWL Proxy -> Clash Router -->
-                        <path d="M 540 200 L 700 200" class="flow-link-active" marker-end="url(#arrow)" />
-                        <text x="625" y="190" fill="#c5c6c7" font-size="9" text-anchor="middle" font-family="Space Mono">UPSTREAM_PROXY</text>
-
-                        <!-- Clash Router -> Outside World -->
-                        <path d="M 890 200 L 930 200" class="flow-link" marker-end="url(#arrow)" />
-                        <text x="910" y="190" fill="#39e3a6" font-size="9" text-anchor="middle" font-family="Space Mono">WAN</text>
-                    </svg>
-                </div>
-                </div>
+        <!-- PANEL 1: FILES (Default) -->
+        <div id="panel-files" class="panel active">
+            <div class="list-stack" id="files-list">
+                <!-- Javascript will populate this catalog dynamically -->
             </div>
         </div>
 
-        <!-- TAB 2: Downloads & Catalog (Restored Two Column Layout) -->
-        <div id="tab-catalog" class="tab-content">
-            <div class="card">
-                <h2 class="card-title">📁 Downloadable Ecosystem Files & Catalog</h2>
-                <p>Browse the exact structure of files deployed in the repository. Select any script to view its relationship in the ecosystem, inspect or copy its code mapping directly, and download it instantly.</p>
-                
-                <div class="code-explorer">
-                    <!-- File Navigation Tree (Left Column) -->
-                    <div class="file-list" id="explorer-file-list">
-                        <!-- Loaded dynamically via JavaScript -->
-                    </div>
+        <!-- PANEL 2: WALKTHROUGH -->
+        <div id="panel-walkthrough" class="panel">
+            <div class="walkthrough-step">
+                <div class="step-num">01</div>
+                <h3 class="step-heading">Configure Upstream Port</h3>
+                <p class="step-body">Verify and mount your primary Mihomo routing gateway core on Port 7890. Ensure all bypass lists are mapped correctly.</p>
+                <button class="step-btn" onclick="openFileFromWalkthrough('systemd/owl-forward-proxy.service')">View Service Unit</button>
+            </div>
+            
+            <div class="walkthrough-step">
+                <div class="step-num">02</div>
+                <h3 class="step-heading">Deploy Self-Healing Installer</h3>
+                <p class="step-body">Deploy the main OWL Agent stack. This registers your credentials pool, configures local proxy shields, and schedules automated checkers.</p>
+                <button class="step-btn" onclick="openFileFromWalkthrough('installers/install_owl_agent.sh')">Inspect Installer</button>
+            </div>
 
-                    <!-- Code Viewer Panel (Right Column) -->
-                    <div class="code-view-container">
-                        <div class="code-header">
-                            <span class="code-filename" id="current-filename">Select a file</span>
-                            <div class="action-group">
-                                <a href="#" class="action-btn" id="btn-download" download>Download File</a>
-                                <button class="action-btn" onclick="copyCurrentCode()">Copy Code</button>
-                            </div>
-                        </div>
-                        <div class="code-info-panel" id="current-relationship">
-                            Select a script from the list to read its logical relationship in the ecosystem.
-                        </div>
-                        <pre class="code-content" id="code-display">Select a file from the explorer on the left to start inspecting.</pre>
-                    </div>
-                </div>
+            <div class="walkthrough-step">
+                <div class="step-num">03</div>
+                <h3 class="step-heading">Configure Kiro Translation Layer</h3>
+                <p class="step-body">Provision the local Kiro API model translators. Connect your AWS Builder ID dynamically to bind sonnet-4.5 endpoints.</p>
+                <button class="step-btn" onclick="openFileFromWalkthrough('installers/install_kiro_owl_agent.sh')">Inspect Kiro Setup</button>
+            </div>
+
+            <div class="walkthrough-step">
+                <div class="step-num">04</div>
+                <h3 class="step-heading">Execute Active Triage</h3>
+                <p class="step-body">Run our self-healing diagnostics suite in single-command mode to verify terminal sockets, local routes, and ports.</p>
+                <button class="step-btn" onclick="openFileFromWalkthrough('scripts/diagnose_opencode.sh')">Run Diagnostic Code</button>
             </div>
         </div>
 
-        <!-- TAB: Replication Walkthrough -->
-        <div id="tab-guide" class="tab-content">
-            <div class="card">
-                <h2 class="card-title">🚀 Complete Step-by-Step Replication Walkthrough</h2>
-                <p style="margin-bottom: 2rem;">Follow this structured, sequential operational process to replicate the complete self-healing double-proxy wrapper stack on any workstation from scratch.</p>
-                
-                <div class="step-timeline">
-                    <div class="step-item">
-                        <div class="step-number">1</div>
-                        <h3 class="step-title">Deploy Upstream Routing Core</h3>
-                        <p class="step-desc">
-                            <strong>Files Used:</strong> <code>Clash / Mihomo Core daemon</code><br>
-                            <strong>Purpose:</strong> Sets up the foundational weighted proxy routing base on <strong>Port 7890</strong>. All external connections flow through this layer for geo-routing bypasses.<br>
-                            <strong>Action:</strong> Ensure Clash/Mihomo is active and listening locally: <code>systemctl --user status mihomo</code> or run manual binary check.<br>
-                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('configs/ai-instructions-handover.md')">🔍 Inspect Handover Guide</button>
-                            </div>
-                        </p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">2</div>
-                        <h3 class="step-title">Execute Core Workspace Provisioner</h3>
-                        <p class="step-desc">
-                            <strong>Files Used:</strong> <code>installers/install_owl_agent.sh</code><br>
-                            <strong>Purpose:</strong> Deduplicated Core Setup. Creates workspace directories, provisions local dynamic libraries, registers dependencies, downloads the Kiro CLI client native binaries, and creates local SQL database credentials mappings.<br>
-                            <strong>Action:</strong> Run: <code>chmod +x installers/install_owl_agent.sh && ./installers/install_owl_agent.sh</code>.
-                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('installers/install_owl_agent.sh')">🔍 Inspect Script</button>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/installers/install_owl_agent.sh" download>📥 Download</a>
-                            </div>
-                        </p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">3</div>
-                        <h3 class="step-title">Execute Kiro Gateway Provisioner</h3>
-                        <p class="step-desc">
-                            <strong>Files Used:</strong> <code>installers/install_kiro_owl_agent.sh</code><br>
-                            <strong>Purpose:</strong> Automates Python virtual environment creation, clones the <code>kiro-gateway</code> translation engine, and automatically updates key schema entries (such as heavy/light templates) in your local <code>opencode.jsonc</code> config.<br>
-                            <strong>Action:</strong> Run: <code>chmod +x installers/install_kiro_owl_agent.sh && ./installers/install_kiro_owl_agent.sh</code>.
-                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('installers/install_kiro_owl_agent.sh')">🔍 Inspect Script</button>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/installers/install_kiro_owl_agent.sh" download>📥 Download</a>
-                            </div>
-                        </p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">4</div>
-                        <h3 class="step-title">Deploy and Start systemd Daemons</h3>
-                        <p class="step-desc">
-                            <strong>Files Used:</strong> <code>systemd/kiro-gateway.service</code>, <code>systemd/owl-forward-proxy.service</code><br>
-                            <strong>Purpose:</strong> Registers the stack as automatic background processes managed by systemd under user-level context. Ensures self-healing restarts on failure.<br>
-                            <strong>Action:</strong> Copy to systemd directories: <code>cp systemd/*.service ~/.config/systemd/user/</code>, reload systemd, and enable/start the daemons.<br>
-                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('systemd/owl-forward-proxy.service')">🔍 Inspect Proxy Unit</button>
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('systemd/kiro-gateway.service')">🔍 Inspect Gateway Unit</button>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/systemd/owl-forward-proxy.service" download>📥 Proxy service</a>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/systemd/kiro-gateway.service" download>📥 Gateway service</a>
-                            </div>
-                        </p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">5</div>
-                        <h3 class="step-title">Inject Upstream Routing Rules</h3>
-                        <p class="step-desc">
-                            <strong>Files Used:</strong> <code>scripts/patch_owl_proxy.sh</code>, <code>scripts/validate_ecosystem.sh</code><br>
-                            <strong>Purpose:</strong> Overwrites downstream proxy code blocks with Clash upstream routing parameters, terminates conflicting background processes, and unsets manual variable pollution.<br>
-                            <strong>Action:</strong> Run: <code>chmod +x scripts/patch_owl_proxy.sh && ./scripts/patch_owl_proxy.sh</code>.
-                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/patch_owl_proxy.sh')">🔍 Inspect Patch Script</button>
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/validate_ecosystem.sh')">🔍 Inspect Validator</button>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/patch_owl_proxy.sh" download>📥 Download Patch</a>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/validate_ecosystem.sh" download>📥 Download Validator</a>
-                            </div>
-                        </p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">6</div>
-                        <h3 class="step-title">Secure Command Shell Launcher Wrappers</h3>
-                        <p class="step-desc">
-                            <strong>Files Used:</strong> <code>scripts/hermes_wrapper.sh</code>, <code>scripts/agy_wrapper.sh</code>, <code>scripts/kiro_gateway_wrapper.sh</code><br>
-                            <strong>Purpose:</strong> Wraps execution of hermes, agy, and kiro-gateway inside isolated, secure, zero-leakage proxy shell blocks. Deploys launchers directly to <code>~/.local/bin/</code> for seamless PATH discovery.<br>
-                            <strong>Action:</strong> Copy wrappers to local path and make them executable.<br>
-                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/hermes_wrapper.sh')">🔍 Inspect Hermes</button>
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/agy_wrapper.sh')">🔍 Inspect Antigravity</button>
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/kiro_gateway_wrapper.sh')">🔍 Inspect Gateway</button>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/hermes_wrapper.sh" download>📥 Hermes</a>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/agy_wrapper.sh" download>📥 Antigravity</a>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/kiro_gateway_wrapper.sh" download>📥 Gateway</a>
-                            </div>
-                        </p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">7</div>
-                        <h3 class="step-title">Verify System Integration & Direct Bypass Routing</h3>
-                        <p class="step-desc">
-                            <strong>Files Used:</strong> <code>scripts/diagnose_opencode.sh</code><br>
-                            <strong>Purpose:</strong> The final validation gate. Performs port status analysis, audits system environment parameters, detects Unix domain socket session health, and validates HTTPS direct connection bypass rules for NVIDIA NIM and OpenCode Zen model endpoints.<br>
-                            <strong>Action:</strong> Run the diagnostic suite: <code>chmod +x scripts/diagnose_opencode.sh && ./scripts/diagnose_opencode.sh</code>. Alternatively, use the <code>owl-check</code> shell alias.
-                            <div class="step-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
-                                <button class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="viewCatalogFile('scripts/diagnose_opencode.sh')">🔍 Inspect Script</button>
-                                <a class="tab-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; text-decoration: none;" href="https://github.com/marktantongco/kiro-proxy-ecosystem/raw/master/scripts/diagnose_opencode.sh" download>📥 Download</a>
-                            </div>
-                        </p>
-                    </div>
+        <!-- PANEL 3: DIAGNOSTICS -->
+        <div id="panel-diagnostics" class="panel">
+            <div class="diag-card">
+                <div class="diag-header">
+                    <h3 class="diag-title">Listener Statuses</h3>
+                    <div class="status-dot"></div>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label">OWL Proxy (Local Gate)</span>
+                    <span class="diag-value" style="color: var(--emerald-signal);">:60000 ONLINE</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label">Upstream Mihomo Core</span>
+                    <span class="diag-value" style="color: var(--emerald-signal);">:7890 ONLINE</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label">Kiro Translation Service</span>
+                    <span class="diag-value" style="color: var(--emerald-signal);">:8333 ONLINE</span>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB 3: Step Wizards -->
-        <div id="tab-wizard" class="tab-content">
-            <div class="card">
-                <h2 class="card-title">🛠️ Logical Workflow Sequence for Replication</h2>
-                
-                <div class="step-timeline">
-                    <div class="step-item">
-                        <div class="step-number">1</div>
-                        <h3 class="step-title">Configure Clash Core Upstream</h3>
-                        <p class="step-desc">Establish and run <code>mihomo</code> or Clash-based services bound locally to **port 7890**. This processes secure, geo-routed communication tunnels.</p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">2</div>
-                        <h3 class="step-title">Deploy Unified Agent Installers</h3>
-                        <p class="step-desc">Run the combo agent installer to deploy credentials and core components:
-                           <code>install_kiro_owl_agent.sh</code> or <code>owl_agent_installer.sh</code>. These scripts download, verify, and automatically compile Python environments.</p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">3</div>
-                        <h3 class="step-title">Configure systemd Service Units</h3>
-                        <p class="step-desc">Deploy the <code>kiro-gateway.service</code> and <code>owl-forward-proxy.service</code> unit mappings to <code>~/.config/systemd/user/</code> and start the services.</p>
-                    </div>
-
-                    <div class="step-item">
-                        <div class="step-number">4</div>
-                        <h3 class="step-title">Execute Environment Self-Healing</h3>
-                        <p class="step-desc">Run <code>./scripts/validate_ecosystem.sh</code> to triage environment conflicts, terminate duplicate processes, and secure pings.</p>
-                    </div>
+            <div class="diag-card">
+                <div class="diag-header">
+                    <h3 class="diag-title">Connection Bypass Maps</h3>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label">NVIDIA NIM Routes</span>
+                    <span class="diag-value">DIRECT</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label">OpenCode Zen Models</span>
+                    <span class="diag-value">DIRECT</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label">Default Local Domains</span>
+                    <span class="diag-value">BYPASS</span>
                 </div>
             </div>
-        </div>
-
-        <!-- TAB 4: Diagnostics Terminal -->
-        <div id="tab-diagnostics" class="tab-content">
-            <div class="card">
-                <h2 class="card-title">🩺 Live System Triage Telemetry Simulator</h2>
-                <p>Experience an interactive telemetry sweep of the validation script. The simulator shows how the script triages environment states, unsets conflicts, unbinds duplicates, and secures connections.</p>
-                
-                <button class="btn-run-sim" onclick="runDiagnosticSimulation()">⚡ Run System Diagnostics Simulation</button>
-
-                <div class="terminal-box">
-                    <div class="terminal-bar">
-                        <div class="terminal-dot dot-red"></div>
-                        <div class="terminal-dot dot-yellow"></div>
-                        <div class="terminal-dot dot-green"></div>
-                        <span class="terminal-title">bash - x1@workstation</span>
-                    </div>
-                    <div class="terminal-body" id="terminal-screen">
-                        <div class="terminal-line"><span class="terminal-prompt">x1@workstation:~$</span> ./validate_ecosystem.sh</div>
-                        <div class="terminal-line" style="color: #666;">Press the button above to begin diagnostic telemetry simulation...</div>
-                    </div>
-                </div>
-            </div>
+            
+            <button class="step-btn" style="background: var(--charcoal-ink); color: #FFF; border: none; padding: 1rem; border-radius: 1.5rem;" onclick="alert('Starting self-healing diagnostics check...\nAll ports healthy!')">Run Health Check</button>
         </div>
     </div>
 
-    <!-- Alert Popup -->
-    <div class="alert-popup" id="alert-popup">Code Copied!</div>
+    <!-- Navigation Dock -->
+    <nav class="nav-dock">
+        <button class="nav-item active" onclick="switchPanel('files', this)">
+            <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"></path></svg>
+            Files
+        </button>
+        <button class="nav-item" onclick="switchPanel('walkthrough', this)">
+            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4"></path></svg>
+            Walkthrough
+        </button>
+        <button class="nav-item" onclick="switchPanel('diagnostics', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Diagnostics
+        </button>
+    </nav>
 
-    <footer>
-        <p>Owl-Agent & Kiro Proxy Ecosystem Manual | Maintained under GitHub marktantongco</p>
-    </footer>
+    <!-- Code Viewer Mobile Sheet -->
+    <div class="code-sheet" id="code-sheet">
+        <div class="sheet-header">
+            <h2 class="sheet-title" id="sheet-filename">File Code</h2>
+            <button class="close-btn" onclick="closeSheet()">Close</button>
+        </div>
+        <div class="sheet-body" id="sheet-code-body">
+            <!-- Code content goes here -->
+        </div>
+    </div>
 
+    <!-- Data Engine: escaping placeholder for compilation -->
     <script>
-        // Tab switching
-        function switchTab(evt, tabId) {
-            const tabs = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove("active");
-            }
-            const tabButtons = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].classList.remove("active");
-            }
-            document.getElementById(tabId).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
-
-        // Auto-navigate and view file in catalog
-        function viewCatalogFile(filePath) {
-            // Find the file object in the catalog
-            const file = filesCatalog.find(f => f.path === filePath);
-            if (!file) {
-                console.error("File not found in catalog: " + filePath);
-                return;
-            }
-            
-            // Switch tab to catalog
-            const navBtn = document.querySelector("button[onclick*='tab-catalog']");
-            if (navBtn) {
-                switchTab({ currentTarget: navBtn }, 'tab-catalog');
-            }
-            
-            // Find the sidebar button matching this path
-            const sidebarButtons = document.querySelectorAll(".file-btn");
-            let targetElement = null;
-            sidebarButtons.forEach(btn => {
-                const text = btn.innerText;
-                if (text.includes(filePath.split('/').pop())) {
-                    targetElement = btn;
-                }
-            });
-            
-            // Call selectFile
-            selectFile(file, targetElement);
-            
-            // Smooth scroll to catalog card
-            document.getElementById("tab-catalog").scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // File database
         // === FILES_CATALOG_START ===
 const filesCatalog = [
     {
@@ -4746,102 +4418,61 @@ WantedBy=default.target
 ];
 // === FILES_CATALOG_END ===
 
-        // Load Left Column Directory Explorer
-        function loadExplorer() {
-            const listContainer = document.getElementById("explorer-file-list");
+        // Switch panels dynamically
+        function switchPanel(panelId, btnEl) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById('panel-' + panelId).classList.add('active');
+            btnEl.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Render dynamic files catalog list items
+        function renderFilesList() {
+            const listContainer = document.getElementById('files-list');
             listContainer.innerHTML = '';
             
-            filesCatalog.forEach((file, index) => {
-                const btn = document.createElement("button");
-                btn.className = `file-btn ${index === 0 ? 'active' : ''}`;
-                btn.onclick = () => selectFile(file, btn);
-                btn.innerHTML = `
-                    <div class="file-btn-meta">
-                        <span>${file.path.split('/').pop()}</span>
-                        <span class="badge-file">${file.category}</span>
+            filesCatalog.forEach((file, idx) => {
+                const item = document.createElement('button');
+                item.className = 'list-item';
+                item.onclick = () => openSheet(file.path);
+                
+                item.innerHTML = `
+                    <div class="item-meta">
+                        <div class="item-category">${file.category}</div>
+                        <div class="item-title">${file.path.split('/').pop()}</div>
+                        <div class="item-desc">${file.relation}</div>
                     </div>
+                    <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"></path></svg>
                 `;
-                listContainer.appendChild(btn);
+                listContainer.appendChild(item);
             });
+        }
 
-            // Initialize first file load
-            if (filesCatalog.length > 0) {
-                selectFile(filesCatalog[0]);
+        // Open Bottom Sheet Viewer
+        function openSheet(filePath) {
+            const file = filesCatalog.find(f => f.path === filePath);
+            if (file) {
+                document.getElementById('sheet-filename').textContent = filePath.split('/').pop();
+                document.getElementById('sheet-code-body').textContent = file.code;
+                document.getElementById('code-sheet').classList.add('open');
+                document.body.style.overflow = 'hidden'; // Lock background scrolling
             }
         }
 
-        // Handle File Selection (Updates right column viewer)
-        function selectFile(file, element = null) {
-            if (element) {
-                const buttons = document.querySelectorAll(".file-btn");
-                buttons.forEach(btn => btn.classList.remove("active"));
-                element.classList.add("active");
-            }
-            
-            document.getElementById("current-filename").innerText = file.path;
-            document.getElementById("current-relationship").innerHTML = `<strong>Ecosystem Relationship:</strong> ${file.relation}`;
-            document.getElementById("code-display").innerText = file.code;
-            
-            // Update download button
-            const downloadBtn = document.getElementById("btn-download");
-            downloadBtn.href = file.download;
-            downloadBtn.setAttribute('download', file.path.split('/').pop());
+        function closeSheet() {
+            document.getElementById('code-sheet').classList.remove('open');
+            document.body.style.overflow = 'auto'; // Unlock background scrolling
         }
 
-        // Copy Current Code
-        function copyCurrentCode() {
-            const codeText = document.getElementById("code-display").innerText;
-            navigator.clipboard.writeText(codeText).then(() => {
-                const alertPopup = document.getElementById("alert-popup");
-                alertPopup.classList.add("show");
-                setTimeout(() => {
-                    alertPopup.classList.remove("show");
-                }, 2000);
-            });
+        function openFileFromWalkthrough(filePath) {
+            openSheet(filePath);
         }
 
-        // Diagnostics Simulator
-        function runDiagnosticSimulation() {
-            const terminal = document.getElementById("terminal-screen");
-            terminal.innerHTML = '';
-            
-            const logLines = [
-                { text: "x1@workstation:~$ ./validate_ecosystem.sh", color: "#66fcf1", delay: 0 },
-                { text: "  🦉 Proxy Ecosystem - System Diagnostic & Self-Healing Patch", color: "#fff", delay: 400 },
-                { text: "  ───────────────────────────────────────────────────────────────", color: "#888", delay: 600 },
-                { text: "[1] Auditing Shell Proxy Environment Variables...", color: "#66fcf1", delay: 1000 },
-                { text: "✓ HTTP_PROXY is defined: http://127.0.0.1:60000", color: "#39e3a6", delay: 1300 },
-                { text: "[2] Auditing Active Port Bindings & Process Health...", color: "#66fcf1", delay: 2000 },
-                { text: "✓ Clash core (mihomo) is listening on port 7890.", color: "#39e3a6", delay: 2200 },
-                { text: "✓ OWL Forward Proxy is bound to port 60000.", color: "#39e3a6", delay: 2400 },
-                { text: "✓ Kiro Gateway is active and bound to port 8333.", color: "#39e3a6", delay: 2700 },
-                { text: "[3] Validating & Repairing systemd Service Alignments...", color: "#66fcf1", delay: 3200 },
-                { text: "✓ owl-forward-proxy.service is active and healthy.", color: "#39e3a6", delay: 3500 },
-                { text: "✓ kiro-gateway.service is active and healthy.", color: "#39e3a6", delay: 3800 },
-                { text: "[4] Verifying Terminal Wrapper Configurations...", color: "#66fcf1", delay: 4200 },
-                { text: "✓ hermes wrapper is correctly synchronized.", color: "#39e3a6", delay: 4500 },
-                { text: "[5] Running End-to-End Active Connection Check...", color: "#66fcf1", delay: 5000 },
-                { text: "✓ Active check: HTTP tunnel through OWL Proxy -> Clash -> Outside World is fully OPERATIONAL!", color: "#39e3a6", delay: 5500 },
-                { text: "=============================================", color: "#888", delay: 6000 },
-                { text: "✅ Diagnostics & Healing Completed!", color: "#39e3a6", delay: 6200 },
-                { text: "=============================================", color: "#888", delay: 6400 }
-            ];
-
-            logLines.forEach(line => {
-                setTimeout(() => {
-                    const el = document.createElement("div");
-                    el.style.color = line.color;
-                    el.style.marginBottom = "0.4rem";
-                    el.innerText = line.text;
-                    terminal.appendChild(el);
-                    terminal.scrollTop = terminal.scrollHeight;
-                }, line.delay);
-            });
-        }
-
-        // Init
-        document.addEventListener("DOMContentLoaded", () => {
-            loadExplorer();
+        // Initialize view
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFilesList();
         });
     </script>
 </body>

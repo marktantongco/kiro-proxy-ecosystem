@@ -110,25 +110,47 @@ js_catalog_str = "const filesCatalog = [\n" + ",\n".join(js_entries) + "\n];"
 
 # Read index.html and replace the database placeholder
 index_path = os.path.join(base_dir, "index.html")
-with open(index_path, "r", encoding="utf-8") as f:
-    index_content = f.read()
+if os.path.exists(index_path):
+    with open(index_path, "r", encoding="utf-8") as f:
+        index_content = f.read()
 
-# Locate the filesCatalog definition and replace it
-# We search for the pattern "// === FILES_CATALOG_START ===" to "// === FILES_CATALOG_END ==="
-start_marker = "// === FILES_CATALOG_START ==="
-end_marker = "// === FILES_CATALOG_END ==="
+    start_marker = "// === FILES_CATALOG_START ==="
+    end_marker = "// === FILES_CATALOG_END ==="
 
-start_idx = index_content.find(start_marker)
-if start_idx != -1:
-    start_replace_idx = start_idx + len(start_marker) + 1  # Include newline
-    end_idx = index_content.find(end_marker, start_replace_idx)
-    if end_idx != -1:
-        new_index_content = index_content[:start_replace_idx] + js_catalog_str + "\n" + index_content[end_idx:]
-        
-        with open(index_path, "w", encoding="utf-8") as f:
-            f.write(new_index_content)
-        print("Compilation successful! index.html compiled with secure ES6 backtick literals using robust comment markers.")
+    start_idx = index_content.find(start_marker)
+    if start_idx != -1:
+        start_replace_idx = start_idx + len(start_marker) + 1  # Include newline
+        end_idx = index_content.find(end_marker, start_replace_idx)
+        if end_idx != -1:
+            new_index_content = index_content[:start_replace_idx] + js_catalog_str + "\n" + index_content[end_idx:]
+            with open(index_path, "w", encoding="utf-8") as f:
+                f.write(new_index_content)
+            print("Compilation successful! index.html compiled with secure ES6 backtick literals using robust comment markers.")
+        else:
+            print("Error: Could not locate FILES_CATALOG_END in index.html!")
     else:
-        print("Error: Could not locate FILES_CATALOG_END in index.html!")
-else:
-    print("Error: Could not locate FILES_CATALOG_START in index.html!")
+        print("Error: Could not locate FILES_CATALOG_START in index.html!")
+
+# Read mobile.html and replace the database placeholder
+mobile_path = os.path.join(base_dir, "mobile.html")
+if os.path.exists(mobile_path):
+    with open(mobile_path, "r", encoding="utf-8") as f:
+        mobile_content = f.read()
+
+    start_marker = "// === FILES_CATALOG_START ==="
+    end_marker = "// === FILES_CATALOG_END ==="
+
+    start_idx = mobile_content.find(start_marker)
+    if start_idx != -1:
+        start_replace_idx = start_idx + len(start_marker) + 1  # Include newline
+        end_idx = mobile_content.find(end_marker, start_replace_idx)
+        if end_idx != -1:
+            new_mobile_content = mobile_content[:start_replace_idx] + js_catalog_str + "\n" + mobile_content[end_idx:]
+            with open(mobile_path, "w", encoding="utf-8") as f:
+                f.write(new_mobile_content)
+            print("Compilation successful! mobile.html compiled with secure ES6 backtick literals using robust comment markers.")
+        else:
+            print("Error: Could not locate FILES_CATALOG_END in mobile.html!")
+    else:
+        print("Error: Could not locate FILES_CATALOG_START in mobile.html!")
+
