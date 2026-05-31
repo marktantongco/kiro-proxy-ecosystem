@@ -3,28 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🦉 OWL Ecosystem Mobile Console</title>
-    <!-- Google Fonts: Premium Typography Outfit & Space Mono -->
+    <title>🦉 OWL Mobile Console</title>
+    <!-- Google Fonts: Outift Display & Space Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Design System: Taste Standard (Standard Level: Creativity 8, Density 4, Variance 8, Motion 6) */
+        /* Modern Design System: Taste Standard (Standard Level: Creativity 9, Density 4, Motion 9) */
         :root {
             --canvas-bg: #F9FAFB;
             --pure-surface: #FFFFFF;
             --charcoal-ink: #18181B;
             --steel-secondary: #71717A;
             --muted-slate: #94A3B8;
-            --whisper-border: rgba(226, 232, 240, 0.7);
-            --diffused-shadow: 0 10px 30px -10px rgba(24, 24, 27, 0.04);
+            --whisper-border: rgba(226, 232, 240, 0.85);
             --electric-blue: #3B82F6;
             --emerald-signal: #10B981;
+            --rose-accent: #E11D48;
+            --amber-accent: #F59E0B;
             
             --font-display: 'Outfit', sans-serif;
             --font-mono: 'Space Mono', monospace;
-            --transition-tactile: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Framer Motion Spring Simulation Easing */
+            --spring-transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --spring-bounce: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --diffused-shadow: 0 20px 40px -15px rgba(24, 24, 27, 0.05);
         }
 
         * {
@@ -40,19 +45,33 @@
             font-family: var(--font-display);
             line-height: 1.6;
             overflow-x: hidden;
-            padding-bottom: 90px; /* Space for the bottom navigation bar */
+            padding-bottom: 95px; /* Dock offset */
         }
 
-        /* Mobile Header */
+        /* Ambient Noise / Architectural Grid Overlay */
+        .ambient-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: 24px 24px;
+            background-image: linear-gradient(to right, rgba(24, 24, 27, 0.015) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(24, 24, 27, 0.015) 1px, transparent 1px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Glassmorphic Sticky Header */
         header {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(249, 250, 251, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(249, 250, 251, 0.85);
+            backdrop-filter: blur(25px) saturate(120%);
+            -webkit-backdrop-filter: blur(25px) saturate(120%);
             border-bottom: 1px solid var(--whisper-border);
-            padding: 1.25rem 1.5rem;
+            padding: 1.15rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -60,89 +79,135 @@
 
         .header-logo {
             font-weight: 800;
-            font-size: 1.25rem;
-            letter-spacing: -0.025em;
+            font-size: 1.35rem;
+            letter-spacing: -0.035em;
             color: var(--charcoal-ink);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .header-logo span {
             color: var(--electric-blue);
+            font-weight: 400;
+        }
+
+        .badge-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .mobile-badge {
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.72rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: var(--emerald-signal);
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.15);
-            padding: 0.25rem 0.65rem;
+            color: var(--electric-blue);
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            padding: 0.3rem 0.65rem;
             border-radius: 9999px;
             font-family: var(--font-mono);
+            text-decoration: none;
+            transition: var(--spring-transition);
         }
 
-        /* Content Container */
+        .mobile-badge:active {
+            transform: scale(0.92);
+        }
+
+        .mobile-badge.live {
+            color: var(--emerald-signal);
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+
+        /* Main Container */
         .container {
-            padding: 1.5rem;
-            max-width: 600px;
+            position: relative;
+            z-index: 2;
+            padding: 1.25rem;
+            max-width: 500px;
             margin: 0 auto;
         }
 
-        /* Interactive Hero Card */
-        .hero-card {
+        /* Hero Editorial Banner - Creativity 9 Asymmetry */
+        .hero-banner {
             background: var(--pure-surface);
-            border-radius: 2rem;
+            border-radius: 2.25rem;
             border: 1px solid var(--whisper-border);
-            padding: 2rem 1.5rem;
+            padding: 2.25rem 1.5rem;
             box-shadow: var(--diffused-shadow);
             margin-bottom: 1.5rem;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        .hero-card::before {
+        .hero-banner::after {
             content: '';
             position: absolute;
             top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background-color: var(--electric-blue);
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            align-self: flex-start;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--electric-blue);
+            border-bottom: 2px solid var(--electric-blue);
+            padding-bottom: 2px;
+            font-family: var(--font-mono);
         }
 
         .hero-title {
-            font-size: 1.85rem;
+            font-size: 1.95rem;
             font-weight: 800;
-            line-height: 1.2;
-            letter-spacing: -0.025em;
-            margin-bottom: 0.75rem;
+            line-height: 1.15;
+            letter-spacing: -0.035em;
+            color: var(--charcoal-ink);
+        }
+
+        .hero-title span {
+            color: var(--steel-secondary);
+            font-weight: 400;
         }
 
         .hero-desc {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             color: var(--steel-secondary);
-            margin-bottom: 1.25rem;
+            line-height: 1.6;
         }
 
-        /* Bottom Sticky Navigation Dock */
+        /* Floating Nav Dock - Spring Physics Interactive */
         .nav-dock {
             position: fixed;
-            bottom: 1.25rem;
-            left: 1.25rem;
-            right: 1.25rem;
-            height: 4.25rem;
+            bottom: 1.5rem;
+            left: 1rem;
+            right: 1rem;
+            height: 4.5rem;
             background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px) saturate(120%);
+            -webkit-backdrop-filter: blur(25px) saturate(120%);
             border: 1px solid var(--whisper-border);
-            border-radius: 2rem;
-            box-shadow: 0 20px 45px -10px rgba(24, 24, 27, 0.08);
+            border-radius: 2.25rem;
+            box-shadow: 0 25px 50px -12px rgba(24, 24, 27, 0.12);
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding: 0 1rem;
+            padding: 0 0.75rem;
             z-index: 200;
+            transition: var(--spring-transition);
         }
 
         .nav-item {
@@ -153,56 +218,55 @@
             color: var(--steel-secondary);
             text-decoration: none;
             font-size: 0.75rem;
-            font-weight: 600;
-            width: 25%;
-            height: 100%;
-            border-radius: 1.25rem;
-            transition: var(--transition-tactile);
+            font-weight: 700;
+            width: 30%;
+            height: 80%;
+            border-radius: 1.75rem;
+            transition: var(--spring-transition);
             border: none;
             background: transparent;
             cursor: pointer;
+            position: relative;
         }
 
         .nav-item svg {
-            width: 1.35rem;
-            height: 1.35rem;
-            margin-bottom: 0.25rem;
+            width: 1.4rem;
+            height: 1.4rem;
+            margin-bottom: 0.15rem;
             stroke: currentColor;
-            stroke-width: 2.25;
+            stroke-width: 2.2;
             fill: none;
-            transition: var(--transition-tactile);
+            transition: var(--spring-transition);
         }
 
         .nav-item.active {
             color: var(--electric-blue);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .nav-item.active svg {
+            transform: scale(1.1);
         }
 
         .nav-item:active {
-            transform: scale(0.92);
+            transform: scale(0.9);
         }
 
-        /* Section Layouts */
+        /* Content Panels */
         .panel {
             display: none;
-            animation: panelFade 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: var(--spring-transition);
         }
 
         .panel.active {
             display: block;
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        @keyframes panelFade {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* List Stack View */
+        /* Staggered GSAP-style Lists */
         .list-stack {
             display: flex;
             flex-direction: column;
@@ -212,57 +276,78 @@
         .list-item {
             background: var(--pure-surface);
             border: 1px solid var(--whisper-border);
-            border-radius: 1.5rem;
-            padding: 1.25rem;
+            border-radius: 1.75rem;
+            padding: 1.35rem;
             box-shadow: var(--diffused-shadow);
-            transition: var(--transition-tactile);
+            transition: var(--spring-transition);
             cursor: pointer;
             text-align: left;
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .list-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--electric-blue);
+            transform: scaleY(0);
+            transition: var(--spring-transition);
+        }
+
+        .list-item:hover::after, .list-item:active::after {
+            transform: scaleY(1);
         }
 
         .list-item:active {
-            transform: scale(0.98);
+            transform: scale(0.975);
             background: #F8FAFC;
         }
 
-        .item-meta {
-            flex-grow: 1;
-        }
-
         .item-category {
-            font-size: 0.72rem;
-            font-weight: 700;
+            font-size: 0.7rem;
+            font-weight: 800;
             text-transform: uppercase;
             color: var(--electric-blue);
-            letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.3rem;
             font-family: var(--font-mono);
         }
 
         .item-title {
-            font-size: 0.95rem;
-            font-weight: 700;
+            font-size: 0.98rem;
+            font-weight: 800;
             color: var(--charcoal-ink);
-            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.2rem;
         }
 
         .item-desc {
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             color: var(--steel-secondary);
-            line-height: 1.4;
+            line-height: 1.45;
         }
 
         .chevron {
             color: var(--muted-slate);
             margin-left: 0.75rem;
             flex-shrink: 0;
+            transition: var(--spring-transition);
         }
 
-        /* Code Block Overlay (Mobile Sheets View) */
+        .list-item:active .chevron {
+            transform: translateX(4px);
+            color: var(--electric-blue);
+        }
+
+        /* Spring Slide-up Sheet (Framer Motion emulation) */
         .code-sheet {
             position: fixed;
             top: 0;
@@ -274,7 +359,7 @@
             display: flex;
             flex-direction: column;
             transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .code-sheet.open {
@@ -291,7 +376,7 @@
         }
 
         .sheet-title {
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 800;
             letter-spacing: -0.025em;
             white-space: nowrap;
@@ -304,35 +389,37 @@
             background: var(--pure-surface);
             border: 1px solid var(--whisper-border);
             color: var(--charcoal-ink);
-            padding: 0.5rem 0.85rem;
-            border-radius: 1rem;
-            font-size: 0.8rem;
-            font-weight: 700;
+            padding: 0.55rem 1rem;
+            border-radius: 1.25rem;
+            font-size: 0.78rem;
+            font-weight: 800;
             cursor: pointer;
-            transition: var(--transition-tactile);
+            transition: var(--spring-transition);
         }
 
         .close-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.93);
         }
 
         .sheet-body {
             flex-grow: 1;
             overflow-y: auto;
             padding: 1.25rem;
-            background: #0F172A; /* Beautiful modern dark code editor background */
+            background: #090A0F; /* Sleek high-contrast off-black terminal view */
             color: #E2E8F0;
             font-family: var(--font-mono);
-            font-size: 0.8rem;
+            font-size: 0.78rem;
+            line-height: 1.5;
             white-space: pre;
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* Diagnostic Panel Styles */
+        /* Diagnostic Modules */
         .diag-card {
             background: var(--pure-surface);
-            border-radius: 1.5rem;
+            border-radius: 1.75rem;
             border: 1px solid var(--whisper-border);
-            padding: 1.25rem;
+            padding: 1.5rem;
             box-shadow: var(--diffused-shadow);
             margin-bottom: 1rem;
         }
@@ -347,10 +434,21 @@
         }
 
         .diag-title {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
+            color: var(--steel-secondary);
+        }
+
+        .status-pulse {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--emerald-signal);
         }
 
         .status-dot {
@@ -363,8 +461,8 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
@@ -372,8 +470,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.65rem 0;
-            border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
             font-size: 0.88rem;
         }
 
@@ -383,6 +481,7 @@
 
         .diag-label {
             color: var(--steel-secondary);
+            font-weight: 500;
         }
 
         .diag-value {
@@ -390,11 +489,11 @@
             font-family: var(--font-mono);
         }
 
-        /* Walkthrough Step List */
+        /* Walkthrough Asymmetric Step Grid */
         .walkthrough-step {
             background: var(--pure-surface);
             border: 1px solid var(--whisper-border);
-            border-radius: 1.5rem;
+            border-radius: 1.75rem;
             padding: 1.5rem;
             box-shadow: var(--diffused-shadow);
             margin-bottom: 1rem;
@@ -404,38 +503,39 @@
         .step-num {
             position: absolute;
             top: 1.25rem;
-            right: 1.25rem;
+            right: 1.5rem;
             font-family: var(--font-mono);
             font-weight: 800;
-            font-size: 1.75rem;
-            color: rgba(59, 130, 246, 0.12);
+            font-size: 2.25rem;
+            color: rgba(59, 130, 246, 0.1);
         }
 
         .step-heading {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 800;
             letter-spacing: -0.025em;
             margin-bottom: 0.5rem;
-            max-width: 85%;
+            max-width: 80%;
         }
 
         .step-body {
             font-size: 0.88rem;
             color: var(--steel-secondary);
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
         }
 
         .step-btn {
             background: var(--canvas-bg);
             border: 1px solid var(--whisper-border);
             color: var(--electric-blue);
-            padding: 0.5rem 1rem;
-            border-radius: 0.85rem;
-            font-size: 0.78rem;
-            font-weight: 700;
+            padding: 0.65rem 1.25rem;
+            border-radius: 1.15rem;
+            font-size: 0.8rem;
+            font-weight: 800;
             width: 100%;
             cursor: pointer;
-            transition: var(--transition-tactile);
+            transition: var(--spring-transition);
             text-align: center;
         }
 
@@ -443,25 +543,74 @@
             transform: scale(0.97);
             background: var(--whisper-border);
         }
+
+        /* Skeletal Loading Shimmer System */
+        .skeletal-shimmer {
+            background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 0.5rem;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Diagnostic Console Screen */
+        .terminal-box {
+            background: #090A0F;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: #10B981;
+            height: 180px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .terminal-line {
+            margin-bottom: 0.35rem;
+            opacity: 0;
+            transform: translateX(-4px);
+            animation: terminalLineReveal 0.2s forwards;
+        }
+
+        @keyframes terminalLineReveal {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .t-blue { color: #3B82F6; }
+        .t-white { color: #F1F5F9; }
+        .t-yellow { color: #F59E0B; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Ambient Grid Overlay -->
+    <div class="ambient-grid"></div>
+
+    <!-- Sticky Header -->
     <header>
-        <div class="header-logo">OWL <span>Mobile</span></div>
-        <a href="index.html" class="mobile-badge" style="text-decoration: none; color: var(--electric-blue); background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.15); font-family: var(--font-display);">Desktop Suite</a>
-        <div class="mobile-badge" style="margin-left: 0.5rem;">v3.2 Stack</div>
+        <div class="header-logo">OWL <span>Console</span></div>
+        <div class="badge-container">
+            <a href="index.html" class="mobile-badge">Desktop</a>
+            <div class="mobile-badge live">v3.2 Stack</div>
+        </div>
     </header>
 
     <div class="container">
-        <!-- Interactive Hero Card -->
-        <div class="hero-card">
-            <h1 class="hero-title">Self-Healing Stack Console</h1>
-            <p class="hero-desc">Manage regional proxy overrides, terminal model gates, and run diagnostic queries directly from your viewport.</p>
+        <!-- Hero Editorial Banner -->
+        <div class="hero-banner">
+            <div class="hero-badge">STITCH-LOOP ORCHESTRATOR</div>
+            <h1 class="hero-title">Ecosystem <span>Triage Hub</span></h1>
+            <p class="hero-desc">An interactive mobile suite compiled dynamically using the Stitch autonomous build loop to verify regional routing, local daemons, and token refresh chains.</p>
         </div>
 
-        <!-- PANEL 1: FILES (Default) -->
+        <!-- PANEL 1: FILES -->
         <div id="panel-files" class="panel active">
             <div class="list-stack" id="files-list">
                 <!-- Javascript will populate this catalog dynamically -->
@@ -503,8 +652,24 @@
         <div id="panel-diagnostics" class="panel">
             <div class="diag-card">
                 <div class="diag-header">
+                    <h3 class="diag-title">Active Log Streams</h3>
+                    <div class="status-pulse">
+                        <div class="status-dot"></div>
+                        LIVE MONITOR
+                    </div>
+                </div>
+                <!-- Interactive Terminal Box -->
+                <div class="terminal-box" id="terminal-screen">
+                    <div class="terminal-line"><span class="t-blue">owl-system:</span> Diagnostic engine ready...</div>
+                    <div class="terminal-line"><span class="t-blue">owl-system:</span> Checking socket mappings...</div>
+                    <div class="terminal-line"><span class="t-white">  [PASS]</span> UNIX socket found at /run/user/1000/kirorun/t/</div>
+                </div>
+                <button class="step-btn" style="background: var(--charcoal-ink); color: #FFF; border: none; padding: 0.85rem; border-radius: 1.25rem;" onclick="triggerTriagePing()">Run Active Triage Check</button>
+            </div>
+
+            <div class="diag-card">
+                <div class="diag-header">
                     <h3 class="diag-title">Listener Statuses</h3>
-                    <div class="status-dot"></div>
                 </div>
                 <div class="diag-item">
                     <span class="diag-label">OWL Proxy (Local Gate)</span>
@@ -522,7 +687,7 @@
 
             <div class="diag-card">
                 <div class="diag-header">
-                    <h3 class="diag-title">Connection Bypass Maps</h3>
+                    <h3 class="diag-title">Bypass Routing Map</h3>
                 </div>
                 <div class="diag-item">
                     <span class="diag-label">NVIDIA NIM Routes</span>
@@ -532,17 +697,11 @@
                     <span class="diag-label">OpenCode Zen Models</span>
                     <span class="diag-value">DIRECT</span>
                 </div>
-                <div class="diag-item">
-                    <span class="diag-label">Default Local Domains</span>
-                    <span class="diag-value">BYPASS</span>
-                </div>
             </div>
-            
-            <button class="step-btn" style="background: var(--charcoal-ink); color: #FFF; border: none; padding: 1rem; border-radius: 1.5rem;" onclick="alert('Starting self-healing diagnostics check...\nAll ports healthy!')">Run Health Check</button>
         </div>
     </div>
 
-    <!-- Navigation Dock -->
+    <!-- Sticky Bottom Navigation Dock -->
     <nav class="nav-dock">
         <button class="nav-item active" onclick="switchPanel('files', this)">
             <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"></path></svg>
@@ -558,18 +717,18 @@
         </button>
     </nav>
 
-    <!-- Code Viewer Mobile Sheet -->
+    <!-- Slide-up Code Viewer Drawer -->
     <div class="code-sheet" id="code-sheet">
         <div class="sheet-header">
             <h2 class="sheet-title" id="sheet-filename">File Code</h2>
-            <button class="close-btn" onclick="closeSheet()">Close</button>
+            <button class="close-btn" onclick="closeSheet()">Close Drawer</button>
         </div>
         <div class="sheet-body" id="sheet-code-body">
-            <!-- Code content goes here -->
+            <!-- Code injected here dynamically -->
         </div>
     </div>
 
-    <!-- Data Engine: escaping placeholder for compilation -->
+    <!-- ESCAPED DB PLACEHOLDER -->
     <script>
         // === FILES_CATALOG_START ===
 const filesCatalog = [
@@ -4418,17 +4577,30 @@ WantedBy=default.target
 ];
 // === FILES_CATALOG_END ===
 
-        // Switch panels dynamically
+        // Smooth panel switcher mimicking shared element transitions
         function switchPanel(panelId, btnEl) {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            const currentActivePanel = document.querySelector('.panel.active');
+            if (currentActivePanel) {
+                currentActivePanel.style.opacity = 0;
+                currentActivePanel.style.transform = 'translateY(8px)';
+                setTimeout(() => {
+                    currentActivePanel.classList.remove('active');
+                    
+                    const nextPanel = document.getElementById('panel-' + panelId);
+                    nextPanel.classList.add('active');
+                    // Force reflow
+                    nextPanel.offsetHeight;
+                    nextPanel.style.opacity = 1;
+                    nextPanel.style.transform = 'translateY(0)';
+                }, 150);
+            }
+
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById('panel-' + panelId).classList.add('active');
             btnEl.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Render dynamic files catalog list items
+        // Render dynamic files database list items
         function renderFilesList() {
             const listContainer = document.getElementById('files-list');
             listContainer.innerHTML = '';
@@ -4436,6 +4608,7 @@ WantedBy=default.target
             filesCatalog.forEach((file, idx) => {
                 const item = document.createElement('button');
                 item.className = 'list-item';
+                item.style.animationDelay = `${idx * 40}ms`;
                 item.onclick = () => openSheet(file.path);
                 
                 item.innerHTML = `
@@ -4444,33 +4617,72 @@ WantedBy=default.target
                         <div class="item-title">${file.path.split('/').pop()}</div>
                         <div class="item-desc">${file.relation}</div>
                     </div>
-                    <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"></path></svg>
+                    <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"></path></svg>
                 `;
                 listContainer.appendChild(item);
             });
         }
 
-        // Open Bottom Sheet Viewer
+        // Slide Drawer Open with CSS transition locks
         function openSheet(filePath) {
             const file = filesCatalog.find(f => f.path === filePath);
             if (file) {
                 document.getElementById('sheet-filename').textContent = filePath.split('/').pop();
                 document.getElementById('sheet-code-body').textContent = file.code;
                 document.getElementById('code-sheet').classList.add('open');
-                document.body.style.overflow = 'hidden'; // Lock background scrolling
+                document.body.style.overflow = 'hidden';
             }
         }
 
         function closeSheet() {
             document.getElementById('code-sheet').classList.remove('open');
-            document.body.style.overflow = 'auto'; // Unlock background scrolling
+            document.body.style.overflow = 'auto';
         }
 
         function openFileFromWalkthrough(filePath) {
             openSheet(filePath);
         }
 
-        // Initialize view
+        // Active Triage Line-by-Line Terminal Simulator
+        let triageRunning = false;
+        function triggerTriagePing() {
+            if (triageRunning) return;
+            triageRunning = true;
+            
+            const term = document.getElementById('terminal-screen');
+            term.innerHTML = '';
+            
+            const lines = [
+                { text: 'owl-triage: Initializing active health pings...', color: 't-blue' },
+                { text: 'owl-triage: Checking Port 60000 (OWL Forward)', color: 't-blue' },
+                { text: '  [ONLINE] 200 OK - Latency 4.2ms', color: '' },
+                { text: 'owl-triage: Checking Port 7890 (Mihomo Geo)', color: 't-blue' },
+                { text: '  [ONLINE] 200 OK - Latency 11.5ms', color: '' },
+                { text: 'owl-triage: Auditing NVIDIA Direct Route bypass', color: 't-blue' },
+                { text: '  [BYPASS] integrate.api.nvidia.com → DIRECT', color: 't-yellow' },
+                { text: 'owl-triage: Auditing OpenCode Zen Model bypass', color: 't-blue' },
+                { text: '  [BYPASS] opencode.ai/zen → DIRECT', color: 't-yellow' },
+                { text: 'owl-triage: All systems green. Stack ready.', color: 't-white' }
+            ];
+
+            let idx = 0;
+            function printNextLine() {
+                if (idx < lines.length) {
+                    const l = lines[idx];
+                    const div = document.createElement('div');
+                    div.className = 'terminal-line';
+                    div.innerHTML = l.color ? `<span class="${l.color}">${l.text.split(':')[0]}:</span>${l.text.substring(l.text.indexOf(':') + 1)}` : l.text;
+                    term.appendChild(div);
+                    term.scrollTop = term.scrollHeight;
+                    idx++;
+                    setTimeout(printNextLine, 250);
+                } else {
+                    triageRunning = false;
+                }
+            }
+            printNextLine();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             renderFilesList();
         });
