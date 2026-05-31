@@ -1,5 +1,16 @@
 # 🦉 Kiro / OWL / Hermes / Clash Proxy Stack - Replication Suite
 
+---
+
+### 🌐 Connected Portals & Integrations
+* **Interactive Web Platform**: 🔗 [https://marktantongco.github.io/kiro-proxy-ecosystem](https://marktantongco.github.io/kiro-proxy-ecosystem) — *The live operational dashboard, procedural walkthroughs, and secure code/script downloader.*
+* **AWS Builder ID Portal**: 🔗 [AWS SSO Console](https://builderid.us-east-1.console.aws.amazon.com) — *Builder ID endpoint for Kiro token refresh sequences.*
+* **Upstream Geo-Routing (Mihomo Core)**: 🔗 [Mihomo Core GitHub](https://github.com/MetaCubeX/mihomo) — *The core routing backbone listening on port `7890`.*
+* **Webshare Proxy Backbone**: 🔗 [Webshare Dashboard](https://www.webshare.io/) — *Provider backbone for rotating IP definitions.*
+* **Anthropic SDK Integration**: 🔗 [Anthropic API Documentation](https://docs.anthropic.com/) — *API standard mapped inside `kiro-gateway` translation pipelines.*
+
+---
+
 Welcome to the comprehensive, self-healing **AI Wrapper and Secure Proxy Replication Suite**. This repository contains every script, wrapper launcher, systemd unit, config map, and utility required to reproduce a completely operational regional-bypass proxy stack for OpenCode, standalone local agents (e.g., Hermes), and parallel research pipelines.
 
 ---
