@@ -46,6 +46,16 @@
             border-color: rgba(226, 232, 240, 0.8) !important;
         }
 
+        body.light-theme #theme-toggle {
+            border-color: rgba(75, 85, 99, 0.3) !important;
+            color: #111827 !important;
+            background-color: #FFFFFF !important;
+        }
+        
+        body.light-theme #theme-toggle:hover {
+            background-color: #F3F4F6 !important;
+        }
+
         body.light-theme .flow-node {
             fill: #FFFFFF;
             stroke: rgba(37, 99, 235, 0.4);
@@ -562,7 +572,7 @@
         (function() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('desktop') !== 'true' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                window.location.replace("mobile.html");
+                window.location.replace("mobile.html?v=3.2_yellow");
                 return;
             }
             if (localStorage.getItem('theme') === 'light') {
@@ -603,7 +613,7 @@
             <button class="tab-btn" onclick="switchTab(event, 'tab-guide')">🚀 Replication Walkthrough</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-wizard')">🛠️ Step-by-Step Wizards</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-diagnostics')">🩺 Diagnostics Terminal</button>
-            <a href="mobile.html" class="tab-btn" style="text-decoration: none; display: inline-block; border-color: var(--color-secondary); color: var(--color-secondary); transition: all 0.3s;">📱 Mobile Console</a>
+            <a href="mobile.html?v=3.2_yellow" class="tab-btn" style="text-decoration: none; display: inline-block; border-color: var(--color-secondary); color: var(--color-secondary); transition: all 0.3s;">📱 Mobile Console</a>
         </nav>
 
         <!-- TAB 1: Architecture Map -->
