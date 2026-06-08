@@ -62,8 +62,8 @@ This replication suite is organized logically into specific functional directori
 * **[`kiro_gateway_wrapper.sh`](./scripts/kiro_gateway_wrapper.sh)**: Standard Kiro terminal launcher.
 
 ### 🛠️ Dedicated Installers (`/installers`)
-* **[`install_owl_agent.sh`](./installers/install_owl_agent.sh)**: *Deduplicated Core Installer.* Custom-built to download `kiro-cli` native binaries from AWS S3, repair dynamic linkers (`ld-linux`), initialize credentials pools, and provision the OWL proxy defense stack at `~/.owl-agent` with robust retry pipelines.
-* **[`install_kiro_owl_agent.sh`](./installers/install_kiro_owl_agent.sh)**: Dedicated installer script for cloning and provisioning the `kiro-gateway` python service, setting up its virtual environment, and configuring parameters in `opencode.jsonc`.
+* **[`install_owl_agent.sh`](./installers/install_owl_agent.sh)**: *Deduplicated Core Installer.* Custom-built to download `kiro-cli` native binaries from `prod.download.cli.kiro.dev` via manifest-based version resolution, repair dynamic linkers (`ld-linux`), initialize credentials pools, and provision the OWL proxy defense stack at `~/.owl-agent` with robust retry pipelines.
+* **[`install_kiro_owl_agent.sh`](./installers/install_kiro_owl_agent.sh)**: Dedicated installer script for cloning and provisioning the `kiro-gateway` python service, setting up its virtual environment, and configuring parameters in `opencode.jsonc`. Uses the same manifest-based download as `install_owl_agent.sh`.
 
 ### 🧠 MCP Integration (`/mcp`)
 * **[`owl_resilient_mcp.py`](./mcp/owl_resilient_mcp.py)**: The premium Model Context Protocol (MCP) server bridge. Translates OpenCode semantic searches and indexes local Obsidian vaults directly through our proxy stack.
@@ -150,6 +150,10 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 * **Kiro Backend Unreachable (SSL_ERROR_SYSCALL)**: The Kiro Gateway's connection to `q.us-east-1.amazonaws.com` was failing because the OWL forward proxy routed it through Mihomo/Clash, which caused TLS handshake drops after establishing the CONNECT tunnel. Traffic timed out with 0 upstream models loaded.
 * **The Resolution**: Added `*.amazonaws.com` and `*.kiro.dev` to the OWL forward proxy's direct-connect bypass list in both the TCP tunnel (`connect_upstream`) and HTTP handler (`handle_http`) routines. These domains now bypass Mihomo entirely and connect directly, restoring the Kiro gateway's ability to authenticate with Amazon Q and load its full 9-model catalog (auto-kiro, claude-haiku-4.5, claude-sonnet-4, claude-sonnet-4.5, deepseek-3.2, glm-5, minimax-m2.1, minimax-m2.5, qwen3-coder-next).
 * **Documentation Updated**: Proxy architecture guide (`configs/README_PROXY_ARCHITECTURE.md`) updated with the new bypass entries and technical explanation of the SSL_ERROR_SYSCALL root cause.
+
+### June 8, 2026: Installer Download URL Migration & Manifest-Based Version Resolution
+* **kiro-cli Download Source Migration**: Both `install_owl_agent.sh` and `install_kiro_owl_agent.sh` now download `kiro-cli` from `prod.download.cli.kiro.dev/stable` instead of the deprecated AWS S3 bucket (`desktop-release.q.us-east-1.amazonaws.com`). Download URLs are resolved dynamically from the manifest at `prod.download.cli.kiro.dev/stable/latest/manifest.json`, using the system's architecture triplet (`<arch>-unknown-linux-<libc>`) to select the correct platform package. This eliminates hardcoded version drift and supports both musl and glibc builds automatically.
+* **Triplet Detection Fix**: Fixed a bug where the `$LIBC` variable was being detected but the triplet was hardcoded with `musl` for all systems. Both installers now correctly use the detected libc value to construct the target triple for manifest lookup.
 
 ### May 31, 2026: Installer Upgrades, Self-Healing Diagnostics & Alias Integration
 * **Advanced Proxy Defense (v3.2)**: Upgraded `install_owl_agent.sh` to provision the robust `proxy_defense_fixed_v3.py` script containing weighted proxy selection, per-domain rate limiting, a domain circuit breaker, and automatic multi-provider credentials/auth injection.

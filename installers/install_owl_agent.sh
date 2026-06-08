@@ -521,9 +521,9 @@ install_with_retry aiohttp-socks || true
 install_with_retry aiofiles || true
 install_with_retry curl_cffi || true
 
-# kiro-cli – the tool that caused the DNS hiccup
+# kiro-cli – native binary from AWS S3 (official distribution)
 echo ""
-echo "   → Installing kiro-cli native binary (with retries for network glitches)..."
+echo "   → Installing kiro-cli native binary from AWS S3..."
 
 ARCH=$(uname -m)
 case "$ARCH" in
@@ -549,24 +549,85 @@ fi
 
 if [[ "$LIBC_DETECTED" == "musl" ]]; then
     KIRO_ZIP="kirocli-${ARCH_DETECTED}-linux-musl.zip"
+    echo "   Detected musl libc → ${KIRO_ZIP}"
 else
     KIRO_ZIP="kirocli-${ARCH_DETECTED}-linux.zip"
+    echo "   Detected glibc ${glibc_ver:-unknown} → ${KIRO_ZIP}"
 fi
 
-KIRO_URL="https://desktop-release.q.us-east-1.amazonaws.com/latest/${KIRO_ZIP}"
+KIRO_MANIFEST_URL="https://prod.download.cli.kiro.dev/stable/latest/manifest.json"
+KIRO_BASE_URL="https://prod.download.cli.kiro.dev/stable"
 KIRO_ZIP_PATH="/tmp/${KIRO_ZIP}"
 
-if curl -fsSL --proto '=https' --tlsv1.2 "$KIRO_URL" -o "$KIRO_ZIP_PATH"; then
+download_kiro() {
+    local triple="${ARCH_DETECTED}-unknown-linux-${LIBC_DETECTED}"
+    local version
+    version=$(curl -sfL "$KIRO_MANIFEST_URL" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+triple = '$triple'
+for pkg in data['packages']:
+    if pkg.get('targetTriple') == triple and pkg.get('fileType') == 'zip' and pkg.get('variant') == 'headless':
+        print(pkg['download'])
+        sys.exit(0)
+print('', end='')
+sys.exit(1)
+" 2>/dev/null || echo "$KIRO_ZIP")
+    local url="$KIRO_BASE_URL/$version"
+    local attempt=0 max=5 delay=10
+    while [ $attempt -lt $max ]; do
+        attempt=$((attempt + 1))
+        echo "   Downloading (attempt $attempt/$max)..."
+        if curl -fsSL -C - --connect-timeout 15 --max-time 300 "$url" -o "$KIRO_ZIP_PATH" 2>/dev/null; then
+            echo "   Download complete ($(ls -lh "$KIRO_ZIP_PATH" | awk '{print $5}'))"
+            return 0
+        fi
+        echo "   Failed, retrying in ${delay}s..."
+        sleep $delay
+    done
+    return 1
+}
+
+if download_kiro; then
+    rm -rf /tmp/kirocli_extracted
     unzip -qo "$KIRO_ZIP_PATH" -d "/tmp/kirocli_extracted"
+    echo "   Extracted kiro-cli binaries:"
+    ls -lh /tmp/kirocli_extracted/kirocli/bin/
+
     mkdir -p "$HOME/.local/bin"
-    cp "/tmp/kirocli_extracted/kirocli/kiro-cli" "$HOME/.local/bin/kiro-cli" 2>/dev/null || cp "/tmp/kirocli_extracted/kirocli-"* "/tmp/kirocli_extracted/kiro-cli" 2>/dev/null || true
-    # Also copy to virtual environment bin directory
-    cp "/tmp/kirocli_extracted/kirocli/kiro-cli" "$VENV_DIR/bin/kiro-cli" 2>/dev/null || cp "/tmp/kirocli_extracted/kiro-cli" "$VENV_DIR/bin/kiro-cli" 2>/dev/null || cp -r "/tmp/kirocli_extracted/"* "$VENV_DIR/bin/" 2>/dev/null || true
-    chmod +x "$VENV_DIR/bin/kiro-cli" "$HOME/.local/bin/kiro-cli" 2>/dev/null || true
+
+    # Install all 3 official binaries
+    for bin in kiro-cli kiro-cli-chat kiro-cli-term; do
+        if [ -f "/tmp/kirocli_extracted/kirocli/bin/$bin" ]; then
+            cp "/tmp/kirocli_extracted/kirocli/bin/$bin" "$HOME/.local/bin/$bin"
+            chmod +x "$HOME/.local/bin/$bin"
+            # Also copy to venv bin for PATH availability
+            cp "/tmp/kirocli_extracted/kirocli/bin/$bin" "$VENV_DIR/bin/$bin" 2>/dev/null || true
+            chmod +x "$VENV_DIR/bin/$bin" 2>/dev/null || true
+            echo "   ✓ $bin ($(du -h "/tmp/kirocli_extracted/kirocli/bin/$bin" | cut -f1))"
+        fi
+    done
+
+    # Install convenience wrappers (q, qchat)
+    for wrapper in q qchat; do
+        if [ -f "/tmp/kirocli_extracted/kirocli/bin/$wrapper" ]; then
+            cp "/tmp/kirocli_extracted/kirocli/bin/$wrapper" "$HOME/.local/bin/$wrapper"
+            chmod +x "$HOME/.local/bin/$wrapper"
+        fi
+    done
+
+    # Run official setup unless skipped
+    if [ -z "${KIRO_CLI_SKIP_SETUP:-}" ] && [ -f "$HOME/.local/bin/kiro-cli" ]; then
+        echo "   Running kiro-cli setup..."
+        "$HOME/.local/bin/kiro-cli" setup 2>&1 || echo "   ⚠️  setup encountered issues (may need interactive terminal)"
+    fi
+
     rm -rf "$KIRO_ZIP_PATH" "/tmp/kirocli_extracted"
-    echo "   🎉 kiro-cli ready."
+    echo "   ✅ kiro-cli native binary installation complete"
 else
-    echo "⚠️  kiro-cli native binary installation failed."
+    echo "   ⚠️  kiro-cli native binary download failed after $max attempts."
+    echo "   Check network connectivity or download manually from:"
+    echo "     $url"
 fi
 
 # ---- [5/5] Config and launchers ----
