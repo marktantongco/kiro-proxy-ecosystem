@@ -880,7 +880,7 @@ fi
 step "4" "Verifying Terminal Wrapper Configurations..."
 
 # hermes wrapper check
-HERMES_WRAP="/home/x1/.local/bin/hermes"
+HERMES_WRAP="\$HOME/.local/bin/hermes"
 if [[ -f "\$HERMES_WRAP" ]]; then
     if grep -q "export HTTP_PROXY=" "\$HERMES_WRAP"; then
         ok "hermes wrapper is correctly synchronized to secure proxy (port 60000)."
@@ -894,7 +894,7 @@ else
 fi
 
 # antigravity wrapper check
-AGY_WRAP="/home/x1/.local/bin/agy"
+AGY_WRAP="\$HOME/.local/bin/agy"
 if [[ -f "\$AGY_WRAP" ]]; then
     if grep -q "export HTTP_PROXY=" "\$AGY_WRAP"; then
         ok "antigravity (agy) wrapper is correctly synchronized to secure proxy (port 60000)."
@@ -906,7 +906,7 @@ else
 fi
 
 # kiro-cli wrapper check
-KIRO_WRAP="/home/x1/.owl-agent/kiro-cli"
+KIRO_WRAP="\$HOME/.owl-agent/kiro-cli"
 if [[ -f "\$KIRO_WRAP" ]]; then
     if grep -q "export HTTP_PROXY=" "\$KIRO_WRAP"; then
         ok "kiro-cli wrapper is correctly synchronized to secure proxy (port 60000)."
@@ -950,8 +950,8 @@ echo ""
 set -euo pipefail
 
 # Config
-PROXY_PY="/home/x1/.owl-agent/forward_proxy.py"
-SERVICE_FILE="/home/x1/.config/systemd/user/owl-forward-proxy.service"
+PROXY_PY="\$HOME/.owl-agent/forward_proxy.py"
+SERVICE_FILE="\$HOME/.config/systemd/user/owl-forward-proxy.service"
 
 # Styling
 BOLD='\\033[1m'
@@ -994,7 +994,7 @@ step "2" "Patching \$PROXY_PY to prioritize UPSTREAM_PROXY..."
 python3 - << 'EOF'
 import sys
 
-filepath = "/home/x1/.owl-agent/forward_proxy.py"
+filepath = os.path.expanduser("~/.owl-agent/forward_proxy.py")
 
 with open(filepath, 'r') as f:
     code = f.read()
@@ -1115,7 +1115,7 @@ ok "Systemd configuration verified."
 # [4/5] Configure kiro-cli wrapper to use OWL Proxy
 # ═══════════════════════════════════════════════════════════════════════════
 step "4" "Configuring kiro-cli wrapper for OWL Proxy..."
-KIRO_WRAPPER="/home/x1/.owl-agent/kiro-cli"
+KIRO_WRAPPER="\$HOME/.owl-agent/kiro-cli"
 if [[ -f "\$KIRO_WRAPPER" ]]; then
     if ! grep -q "export HTTP_PROXY=" "\$KIRO_WRAPPER"; then
         # Recreate the wrapper with explicit proxy configuration
@@ -1181,7 +1181,7 @@ echo ""
 set -euo pipefail
 
 # Configuration (Change these to match your Hermes codebase paths)
-HERMES_DIR="/home/x1/Documents/ubuntu-obsidian"
+HERMES_DIR="\$HOME/Documents/ubuntu-obsidian"
 HERMES_CMD="python3" 
 HERMES_SCRIPT="agent.py" # Replace with your primary Hermes execution script (e.g. main.py, cli.js, etc.)
 
@@ -1249,7 +1249,7 @@ if [[ -f "\$HERMES_SCRIPT" ]]; then
 else
     # Fallback to general execution if no specific script matches
     warn "Specified script '\$HERMES_SCRIPT' not found in \$HERMES_DIR. Running fallback shell..."
-    echo "  Hint: Edit /home/x1/.local/bin/hermes to specify your exact startup script."
+    echo "  Hint: Edit \\\$HOME/.local/bin/hermes to specify your exact startup script."
     echo ""
     exec bash
 fi
@@ -1265,7 +1265,7 @@ fi
 set -euo pipefail
 
 # Configuration
-AGY_REAL_PATH="/home/x1/.local/bin/agy.real"
+AGY_REAL_PATH="\$HOME/.local/bin/agy.real"
 
 # Styling
 BOLD='\\033[1m'
@@ -1339,7 +1339,7 @@ fi
 # 🦉 Kiro Gateway - Terminal Launcher & Controller
 set -euo pipefail
 
-GATEWAY_DIR="/home/x1/Documents/proxy/kiro-gateway"
+GATEWAY_DIR="\$HOME/Documents/proxy/kiro-gateway"
 VENV_PYTHON="\$GATEWAY_DIR/.venv/bin/python"
 MAIN_PY="\$GATEWAY_DIR/main.py"
 DEFAULT_PORT=8333
@@ -1444,7 +1444,7 @@ source "\$VENV_DIR/bin/activate"
 pip install --quiet --upgrade pip
 pip install --quiet -r "\$KIRO_DIR/requirements.txt"
 
-# Install kiro-cli native binary (NOT a Python package)
+# Install kiro-cli native binary from AWS S3 (official distribution)
 ARCH=\$(uname -m)
 case "\$ARCH" in
     x86_64|amd64)  ARCH_DETECTED="x86_64" ;;
@@ -1469,25 +1469,81 @@ fi
 
 if [[ "\$LIBC_DETECTED" == "musl" ]]; then
     KIRO_ZIP="kirocli-\${ARCH_DETECTED}-linux-musl.zip"
+    info "Detected musl libc → \${KIRO_ZIP}"
 else
     KIRO_ZIP="kirocli-\${ARCH_DETECTED}-linux.zip"
+    info "Detected glibc \${glibc_ver:-unknown} → \${KIRO_ZIP}"
 fi
 
-KIRO_URL="https://desktop-release.q.us-east-1.amazonaws.com/latest/\${KIRO_ZIP}"
+KIRO_MANIFEST_URL="https://prod.download.cli.kiro.dev/stable/latest/manifest.json"
+KIRO_BASE_URL="https://prod.download.cli.kiro.dev/stable"
 KIRO_ZIP_PATH="/tmp/\${KIRO_ZIP}"
 
-info "Downloading kiro-cli native binary from AWS S3..."
-if curl -fsSL --proto '=https' --tlsv1.2 "\$KIRO_URL" -o "\$KIRO_ZIP_PATH"; then
+download_kiro() {
+    local triple="\${ARCH_DETECTED}-unknown-linux-\${LIBC_DETECTED}"
+    local version
+    version=\$(curl -sfL "\$KIRO_MANIFEST_URL" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+triple = '\$triple'
+for pkg in data['packages']:
+    if pkg.get('targetTriple') == triple and pkg.get('fileType') == 'zip' and pkg.get('variant') == 'headless':
+        print(pkg['download'])
+        sys.exit(0)
+print('', end='')
+sys.exit(1)
+" 2>/dev/null || echo "\$KIRO_ZIP")
+    local url="\$KIRO_BASE_URL/\$version"
+    local attempt=0 max=5 delay=10
+    while [ \$attempt -lt \$max ]; do
+        attempt=\$((attempt + 1))
+        info "Downloading kiro-cli from prod.download.cli.kiro.dev (attempt \$attempt/\$max)..."
+        if curl -fsSL -C - --connect-timeout 15 --max-time 300 "\$url" -o "\$KIRO_ZIP_PATH" 2>/dev/null; then
+            ok "Download complete (\$(ls -lh "\$KIRO_ZIP_PATH" | awk '{print \$5}'))"
+            return 0
+        fi
+        warn "Download failed, retrying in \${delay}s..."
+        sleep \$delay
+    done
+    return 1
+}
+
+if download_kiro; then
+    rm -rf /tmp/kirocli_extracted
     unzip -qo "\$KIRO_ZIP_PATH" -d "/tmp/kirocli_extracted"
+    info "Extracted kiro-cli binaries:"
+    ls -lh /tmp/kirocli_extracted/kirocli/bin/ | awk '{print "    " \$NF " (" \$5 ")"}'
+
     mkdir -p "\$HOME/.local/bin"
-    cp "/tmp/kirocli_extracted/kirocli/kiro-cli" "\$HOME/.local/bin/kiro-cli" 2>/dev/null || cp "/tmp/kirocli_extracted/kirocli-"* "/tmp/kirocli_extracted/kiro-cli" 2>/dev/null || true
-    # Also copy to virtual environment bin directory so it runs when venv is active
-    cp "/tmp/kirocli_extracted/kirocli/kiro-cli" "\$VENV_DIR/bin/kiro-cli" 2>/dev/null || cp "/tmp/kirocli_extracted/kiro-cli" "\$VENV_DIR/bin/kiro-cli" 2>/dev/null || cp -r "/tmp/kirocli_extracted/"* "\$VENV_DIR/bin/" 2>/dev/null || true
-    chmod +x "\$VENV_DIR/bin/kiro-cli" "\$HOME/.local/bin/kiro-cli" 2>/dev/null || true
+
+    # Install all 3 official binaries
+    for bin in kiro-cli kiro-cli-chat kiro-cli-term; do
+        if [ -f "/tmp/kirocli_extracted/kirocli/bin/\$bin" ]; then
+            install -m 755 "/tmp/kirocli_extracted/kirocli/bin/\$bin" "\$HOME/.local/bin/\$bin"
+            # Also copy to venv bin for PATH availability
+            install -m 755 "/tmp/kirocli_extracted/kirocli/bin/\$bin" "\$VENV_DIR/bin/\$bin" 2>/dev/null || true
+            ok "\$bin installed (\$(du -h "/tmp/kirocli_extracted/kirocli/bin/\$bin" | cut -f1))"
+        fi
+    done
+
+    # Install convenience wrappers (q, qchat)
+    for wrapper in q qchat; do
+        if [ -f "/tmp/kirocli_extracted/kirocli/bin/\$wrapper" ]; then
+            install -m 755 "/tmp/kirocli_extracted/kirocli/bin/\$wrapper" "\$HOME/.local/bin/\$wrapper"
+        fi
+    done
+
+    # Run official setup unless skipped
+    if [ -z "\${KIRO_CLI_SKIP_SETUP:-}" ] && [ -f "\$HOME/.local/bin/kiro-cli" ]; then
+        info "Running kiro-cli setup..."
+        "\$HOME/.local/bin/kiro-cli" setup 2>&1 || warn "setup encountered issues (may need interactive terminal)"
+    fi
+
     rm -rf "\$KIRO_ZIP_PATH" "/tmp/kirocli_extracted"
-    ok "kiro-cli native binary installed successfully"
+    ok "kiro-cli native binary installation complete"
 else
-    err "Failed to download kiro-cli native binary from S3"
+    err "Failed to download kiro-cli native binary after 5 attempts"
+    err "Download manually: \$url"
 fi
 
 deactivate
@@ -2346,9 +2402,9 @@ install_with_retry aiohttp-socks || true
 install_with_retry aiofiles || true
 install_with_retry curl_cffi || true
 
-# kiro-cli – the tool that caused the DNS hiccup
+# kiro-cli – native binary from AWS S3 (official distribution)
 echo ""
-echo "   → Installing kiro-cli native binary (with retries for network glitches)..."
+echo "   → Installing kiro-cli native binary from AWS S3..."
 
 ARCH=\$(uname -m)
 case "\$ARCH" in
@@ -2374,24 +2430,85 @@ fi
 
 if [[ "\$LIBC_DETECTED" == "musl" ]]; then
     KIRO_ZIP="kirocli-\${ARCH_DETECTED}-linux-musl.zip"
+    echo "   Detected musl libc → \${KIRO_ZIP}"
 else
     KIRO_ZIP="kirocli-\${ARCH_DETECTED}-linux.zip"
+    echo "   Detected glibc \${glibc_ver:-unknown} → \${KIRO_ZIP}"
 fi
 
-KIRO_URL="https://desktop-release.q.us-east-1.amazonaws.com/latest/\${KIRO_ZIP}"
+KIRO_MANIFEST_URL="https://prod.download.cli.kiro.dev/stable/latest/manifest.json"
+KIRO_BASE_URL="https://prod.download.cli.kiro.dev/stable"
 KIRO_ZIP_PATH="/tmp/\${KIRO_ZIP}"
 
-if curl -fsSL --proto '=https' --tlsv1.2 "\$KIRO_URL" -o "\$KIRO_ZIP_PATH"; then
+download_kiro() {
+    local triple="\${ARCH_DETECTED}-unknown-linux-\${LIBC_DETECTED}"
+    local version
+    version=\$(curl -sfL "\$KIRO_MANIFEST_URL" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+triple = '\$triple'
+for pkg in data['packages']:
+    if pkg.get('targetTriple') == triple and pkg.get('fileType') == 'zip' and pkg.get('variant') == 'headless':
+        print(pkg['download'])
+        sys.exit(0)
+print('', end='')
+sys.exit(1)
+" 2>/dev/null || echo "\$KIRO_ZIP")
+    local url="\$KIRO_BASE_URL/\$version"
+    local attempt=0 max=5 delay=10
+    while [ \$attempt -lt \$max ]; do
+        attempt=\$((attempt + 1))
+        echo "   Downloading (attempt \$attempt/\$max)..."
+        if curl -fsSL -C - --connect-timeout 15 --max-time 300 "\$url" -o "\$KIRO_ZIP_PATH" 2>/dev/null; then
+            echo "   Download complete (\$(ls -lh "\$KIRO_ZIP_PATH" | awk '{print \$5}'))"
+            return 0
+        fi
+        echo "   Failed, retrying in \${delay}s..."
+        sleep \$delay
+    done
+    return 1
+}
+
+if download_kiro; then
+    rm -rf /tmp/kirocli_extracted
     unzip -qo "\$KIRO_ZIP_PATH" -d "/tmp/kirocli_extracted"
+    echo "   Extracted kiro-cli binaries:"
+    ls -lh /tmp/kirocli_extracted/kirocli/bin/
+
     mkdir -p "\$HOME/.local/bin"
-    cp "/tmp/kirocli_extracted/kirocli/kiro-cli" "\$HOME/.local/bin/kiro-cli" 2>/dev/null || cp "/tmp/kirocli_extracted/kirocli-"* "/tmp/kirocli_extracted/kiro-cli" 2>/dev/null || true
-    # Also copy to virtual environment bin directory
-    cp "/tmp/kirocli_extracted/kirocli/kiro-cli" "\$VENV_DIR/bin/kiro-cli" 2>/dev/null || cp "/tmp/kirocli_extracted/kiro-cli" "\$VENV_DIR/bin/kiro-cli" 2>/dev/null || cp -r "/tmp/kirocli_extracted/"* "\$VENV_DIR/bin/" 2>/dev/null || true
-    chmod +x "\$VENV_DIR/bin/kiro-cli" "\$HOME/.local/bin/kiro-cli" 2>/dev/null || true
+
+    # Install all 3 official binaries
+    for bin in kiro-cli kiro-cli-chat kiro-cli-term; do
+        if [ -f "/tmp/kirocli_extracted/kirocli/bin/\$bin" ]; then
+            cp "/tmp/kirocli_extracted/kirocli/bin/\$bin" "\$HOME/.local/bin/\$bin"
+            chmod +x "\$HOME/.local/bin/\$bin"
+            # Also copy to venv bin for PATH availability
+            cp "/tmp/kirocli_extracted/kirocli/bin/\$bin" "\$VENV_DIR/bin/\$bin" 2>/dev/null || true
+            chmod +x "\$VENV_DIR/bin/\$bin" 2>/dev/null || true
+            echo "   ✓ \$bin (\$(du -h "/tmp/kirocli_extracted/kirocli/bin/\$bin" | cut -f1))"
+        fi
+    done
+
+    # Install convenience wrappers (q, qchat)
+    for wrapper in q qchat; do
+        if [ -f "/tmp/kirocli_extracted/kirocli/bin/\$wrapper" ]; then
+            cp "/tmp/kirocli_extracted/kirocli/bin/\$wrapper" "\$HOME/.local/bin/\$wrapper"
+            chmod +x "\$HOME/.local/bin/\$wrapper"
+        fi
+    done
+
+    # Run official setup unless skipped
+    if [ -z "\${KIRO_CLI_SKIP_SETUP:-}" ] && [ -f "\$HOME/.local/bin/kiro-cli" ]; then
+        echo "   Running kiro-cli setup..."
+        "\$HOME/.local/bin/kiro-cli" setup 2>&1 || echo "   ⚠️  setup encountered issues (may need interactive terminal)"
+    fi
+
     rm -rf "\$KIRO_ZIP_PATH" "/tmp/kirocli_extracted"
-    echo "   🎉 kiro-cli ready."
+    echo "   ✅ kiro-cli native binary installation complete"
 else
-    echo "⚠️  kiro-cli native binary installation failed."
+    echo "   ⚠️  kiro-cli native binary download failed after \$max attempts."
+    echo "   Check network connectivity or download manually from:"
+    echo "     \$url"
 fi
 
 # ---- [5/5] Config and launchers ----
@@ -3768,7 +3885,7 @@ def fetch_direct(method: str, url: str, extra: dict) -> dict:
 
 # ─── Through OWL MCP (With Middleware) ──────────────────────────────────────
 
-OWL_SERVER_SCRIPT = "/home/x1/Documents/owl-agent-installer/owl_resilient_mcp.py"
+OWL_SERVER_SCRIPT = os.path.expanduser("~/Documents/owl-agent-installer/owl_resilient_mcp.py")
 
 
 class OWLClient:
@@ -4109,7 +4226,7 @@ Configured Antigravity CLI (agy) + Gemini for full auto-approval of all commands
 
 ## What Was Done
 
-Modified \`/home/x1/.gemini/antigravity-cli/settings.json\` — replaced the restricted permission allowlist with wildcard auto-approval for all operations.
+Modified \`~/.gemini/antigravity-cli/settings.json\` — replaced the restricted permission allowlist with wildcard auto-approval for all operations.
 
 ### Final Config
 
@@ -4126,7 +4243,7 @@ Modified \`/home/x1/.gemini/antigravity-cli/settings.json\` — replaced the res
       "edit_file(*)"
     ]
   },
-  "trustedWorkspaces": ["/home/x1"]
+  "trustedWorkspaces": ["\$HOME"]
 }
 \`\`\`
 
@@ -4134,10 +4251,10 @@ Modified \`/home/x1/.gemini/antigravity-cli/settings.json\` — replaced the res
 
 | File | Purpose |
 |---|---|
-| \`/home/x1/.gemini/antigravity-cli/settings.json\` | Antigravity CLI permissions & settings |
-| \`/home/x1/.gemini/antigravity-cli/\` | Full Antigravity CLI data directory |
-| \`/home/x1/.gemini/config/projects/840f2d68-5a6b-4def-aae3-690dd154ce93.json\` | Gemini project config (has \`allowWrite: true\` for \`/home/x1\`) |
-| \`/home/x1/.antigravity/config.yaml\` | Antigravity workspace/memory config |
+| \`~/.gemini/antigravity-cli/settings.json\` | Antigravity CLI permissions & settings |
+| \`~/.gemini/antigravity-cli/\` | Full Antigravity CLI data directory |
+| \`~/.gemini/config/projects/840f2d68-5a6b-4def-aae3-690dd154ce93.json\` | Gemini project config (has \`allowWrite: true\` for \`/home/x1\`) |
+| \`~/.antigravity/config.yaml\` | Antigravity workspace/memory config |
 
 ## State
 
@@ -4153,7 +4270,7 @@ Modified \`/home/x1/.gemini/antigravity-cli/settings.json\` — replaced the res
 
 ## Notes
 
-- The user was getting a \`Requested Permission: write_file(/home/x1/.gemini/config)\` prompt from agy
+- The user was getting a \`Requested Permission: write_file(\$HOME/.gemini/config)\` prompt from agy
 - They wanted zero prompts — full auto-approval for every command execution
 - No sensitive data exposed in this session
 `
@@ -4449,7 +4566,7 @@ graph TD
 To prevent upstream proxy loops and SSL handshake drops (where Mihomo's exit nodes get blocked or fail to resolve handshakes for core development and AI endpoints), the \`owl-forward-proxy\` intercepts all calls and forces a **direct-connect bypass** for high-priority domains.
 
 ### Bypassed Domains
-The following domains are explicitly bypassed inside \`/home/x1/.owl-agent/forward_proxy.py\`:
+The following domains are explicitly bypassed inside \`~/.owl-agent/forward_proxy.py\` (referenced as \`\$HOME/.owl-agent/forward_proxy.py\` in scripts):
 1. \`localhost\`, \`127.0.0.1\`, \`::1\` (Loopback services)
 2. \`integrate.api.nvidia.com\` & \`*.nvidia.com\` (NVIDIA NIM APIs / DeepSeek V4)
 3. \`opencode.ai\` & \`*.opencode.ai\` (OpenCode Zen model endpoints)
@@ -4484,7 +4601,7 @@ If \`opencode\` or \`kiro-cli\` throws a socket or connection error, follow this
 ### ① Run the Automated Diagnostic Tool
 Execute the built-in troubleshooting script:
 \`\`\`bash
-/home/x1/.owl-agent/diagnose_opencode.sh
+\$HOME/.owl-agent/diagnose_opencode.sh
 \`\`\`
 
 This script will verify:
@@ -4526,10 +4643,10 @@ After=kiro-tokend.service
 
 [Service]
 Type=simple
-WorkingDirectory=/home/x1/Documents/proxy/kiro-gateway
+WorkingDirectory=%h/Documents/proxy/kiro-gateway
 Environment=PROXY_API_KEY=kiro-gateway-8333
 Environment=KIRO_CLI_DB_FILE=~/.local/share/kiro-cli/data.sqlite3
-ExecStart=/home/x1/Documents/proxy/kiro-gateway/.venv/bin/python main.py --port 8333
+ExecStart=%h/Documents/proxy/kiro-gateway/.venv/bin/python main.py --port 8333
 Restart=on-failure
 RestartSec=5
 
@@ -4549,11 +4666,11 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/x1/.owl-agent/venv/bin/python /home/x1/.owl-agent/forward_proxy.py
+ExecStart=%h/.owl-agent/venv/bin/python %h/.owl-agent/forward_proxy.py
 Restart=on-failure
 RestartSec=3
-StandardOutput=append:/home/x1/.owl-agent/logs/forward-proxy.log
-StandardError=append:/home/x1/.owl-agent/logs/forward-proxy.log
+StandardOutput=append:%h/.owl-agent/logs/forward-proxy.log
+StandardError=append:%h/.owl-agent/logs/forward-proxy.log
 # Upstream proxy for geo-routing (mihomo/9router)
 Environment=UPSTREAM_PROXY=http://127.0.0.1:7890
 

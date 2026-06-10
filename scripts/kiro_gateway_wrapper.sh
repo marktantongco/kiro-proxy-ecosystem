@@ -2,7 +2,7 @@
 # 🦉 Kiro Gateway - Terminal Launcher & Controller
 set -euo pipefail
 
-GATEWAY_DIR="/home/x1/Documents/proxy/kiro-gateway"
+GATEWAY_DIR="$HOME/Documents/proxy/kiro-gateway"
 VENV_PYTHON="$GATEWAY_DIR/.venv/bin/python"
 MAIN_PY="$GATEWAY_DIR/main.py"
 DEFAULT_PORT=8333

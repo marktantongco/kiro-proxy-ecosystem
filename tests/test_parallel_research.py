@@ -109,7 +109,7 @@ def fetch_direct(method: str, url: str, extra: dict) -> dict:
 
 # ─── Through OWL MCP (With Middleware) ──────────────────────────────────────
 
-OWL_SERVER_SCRIPT = "/home/x1/Documents/owl-agent-installer/owl_resilient_mcp.py"
+OWL_SERVER_SCRIPT = os.path.expanduser("~/Documents/owl-agent-installer/owl_resilient_mcp.py")
 
 
 class OWLClient:

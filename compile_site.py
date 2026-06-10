@@ -79,7 +79,7 @@ files_to_compile = [
     }
 ]
 
-base_dir = "/home/x1/Documents/kiro-proxy-ecosystem"
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Read each file and construct the JS catalog manually using backtick template literals
 js_entries = []

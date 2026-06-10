@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Configuration
-AGY_REAL_PATH="/home/x1/.local/bin/agy.real"
+AGY_REAL_PATH="$HOME/.local/bin/agy.real"
 
 # Styling
 BOLD='\033[1m'

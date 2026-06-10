@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Configuration (Change these to match your Hermes codebase paths)
-HERMES_DIR="/home/x1/Documents/ubuntu-obsidian"
+HERMES_DIR="$HOME/Documents/ubuntu-obsidian"
 HERMES_CMD="python3" 
 HERMES_SCRIPT="agent.py" # Replace with your primary Hermes execution script (e.g. main.py, cli.js, etc.)
 
@@ -71,7 +71,7 @@ if [[ -f "$HERMES_SCRIPT" ]]; then
 else
     # Fallback to general execution if no specific script matches
     warn "Specified script '$HERMES_SCRIPT' not found in $HERMES_DIR. Running fallback shell..."
-    echo "  Hint: Edit /home/x1/.local/bin/hermes to specify your exact startup script."
+    echo "  Hint: Edit \$HOME/.local/bin/hermes to specify your exact startup script."
     echo ""
     exec bash
 fi

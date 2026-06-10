@@ -5,11 +5,11 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/x1/.owl-agent/venv/bin/python /home/x1/.owl-agent/forward_proxy.py
+ExecStart=%h/.owl-agent/venv/bin/python %h/.owl-agent/forward_proxy.py
 Restart=on-failure
 RestartSec=3
-StandardOutput=append:/home/x1/.owl-agent/logs/forward-proxy.log
-StandardError=append:/home/x1/.owl-agent/logs/forward-proxy.log
+StandardOutput=append:%h/.owl-agent/logs/forward-proxy.log
+StandardError=append:%h/.owl-agent/logs/forward-proxy.log
 # Upstream proxy for geo-routing (mihomo/9router)
 Environment=UPSTREAM_PROXY=http://127.0.0.1:7890
 

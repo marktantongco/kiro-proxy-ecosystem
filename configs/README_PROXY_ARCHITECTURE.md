@@ -26,7 +26,7 @@ graph TD
 To prevent upstream proxy loops and SSL handshake drops (where Mihomo's exit nodes get blocked or fail to resolve handshakes for core development and AI endpoints), the `owl-forward-proxy` intercepts all calls and forces a **direct-connect bypass** for high-priority domains.
 
 ### Bypassed Domains
-The following domains are explicitly bypassed inside `/home/x1/.owl-agent/forward_proxy.py`:
+The following domains are explicitly bypassed inside `~/.owl-agent/forward_proxy.py` (referenced as `$HOME/.owl-agent/forward_proxy.py` in scripts):
 1. `localhost`, `127.0.0.1`, `::1` (Loopback services)
 2. `integrate.api.nvidia.com` & `*.nvidia.com` (NVIDIA NIM APIs / DeepSeek V4)
 3. `opencode.ai` & `*.opencode.ai` (OpenCode Zen model endpoints)
@@ -61,7 +61,7 @@ If `opencode` or `kiro-cli` throws a socket or connection error, follow this seq
 ### ① Run the Automated Diagnostic Tool
 Execute the built-in troubleshooting script:
 ```bash
-/home/x1/.owl-agent/diagnose_opencode.sh
+$HOME/.owl-agent/diagnose_opencode.sh
 ```
 
 This script will verify:

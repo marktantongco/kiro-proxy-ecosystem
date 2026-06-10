@@ -149,7 +149,7 @@ fi
 step "4" "Verifying Terminal Wrapper Configurations..."
 
 # hermes wrapper check
-HERMES_WRAP="/home/x1/.local/bin/hermes"
+HERMES_WRAP="$HOME/.local/bin/hermes"
 if [[ -f "$HERMES_WRAP" ]]; then
     if grep -q "export HTTP_PROXY=" "$HERMES_WRAP"; then
         ok "hermes wrapper is correctly synchronized to secure proxy (port 60000)."
@@ -163,7 +163,7 @@ else
 fi
 
 # antigravity wrapper check
-AGY_WRAP="/home/x1/.local/bin/agy"
+AGY_WRAP="$HOME/.local/bin/agy"
 if [[ -f "$AGY_WRAP" ]]; then
     if grep -q "export HTTP_PROXY=" "$AGY_WRAP"; then
         ok "antigravity (agy) wrapper is correctly synchronized to secure proxy (port 60000)."
@@ -175,7 +175,7 @@ else
 fi
 
 # kiro-cli wrapper check
-KIRO_WRAP="/home/x1/.owl-agent/kiro-cli"
+KIRO_WRAP="$HOME/.owl-agent/kiro-cli"
 if [[ -f "$KIRO_WRAP" ]]; then
     if grep -q "export HTTP_PROXY=" "$KIRO_WRAP"; then
         ok "kiro-cli wrapper is correctly synchronized to secure proxy (port 60000)."

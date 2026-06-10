@@ -6,7 +6,7 @@ Configured Antigravity CLI (agy) + Gemini for full auto-approval of all commands
 
 ## What Was Done
 
-Modified `/home/x1/.gemini/antigravity-cli/settings.json` — replaced the restricted permission allowlist with wildcard auto-approval for all operations.
+Modified `~/.gemini/antigravity-cli/settings.json` — replaced the restricted permission allowlist with wildcard auto-approval for all operations.
 
 ### Final Config
 
@@ -23,7 +23,7 @@ Modified `/home/x1/.gemini/antigravity-cli/settings.json` — replaced the restr
       "edit_file(*)"
     ]
   },
-  "trustedWorkspaces": ["/home/x1"]
+  "trustedWorkspaces": ["$HOME"]
 }
 ```
 
@@ -31,10 +31,10 @@ Modified `/home/x1/.gemini/antigravity-cli/settings.json` — replaced the restr
 
 | File | Purpose |
 |---|---|
-| `/home/x1/.gemini/antigravity-cli/settings.json` | Antigravity CLI permissions & settings |
-| `/home/x1/.gemini/antigravity-cli/` | Full Antigravity CLI data directory |
-| `/home/x1/.gemini/config/projects/840f2d68-5a6b-4def-aae3-690dd154ce93.json` | Gemini project config (has `allowWrite: true` for `/home/x1`) |
-| `/home/x1/.antigravity/config.yaml` | Antigravity workspace/memory config |
+| `~/.gemini/antigravity-cli/settings.json` | Antigravity CLI permissions & settings |
+| `~/.gemini/antigravity-cli/` | Full Antigravity CLI data directory |
+| `~/.gemini/config/projects/840f2d68-5a6b-4def-aae3-690dd154ce93.json` | Gemini project config (has `allowWrite: true` for `/home/x1`) |
+| `~/.antigravity/config.yaml` | Antigravity workspace/memory config |
 
 ## State
 
@@ -50,6 +50,6 @@ Modified `/home/x1/.gemini/antigravity-cli/settings.json` — replaced the restr
 
 ## Notes
 
-- The user was getting a `Requested Permission: write_file(/home/x1/.gemini/config)` prompt from agy
+- The user was getting a `Requested Permission: write_file($HOME/.gemini/config)` prompt from agy
 - They wanted zero prompts — full auto-approval for every command execution
 - No sensitive data exposed in this session

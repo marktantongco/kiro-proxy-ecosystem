@@ -4,8 +4,8 @@
 set -euo pipefail
 
 # Config
-PROXY_PY="/home/x1/.owl-agent/forward_proxy.py"
-SERVICE_FILE="/home/x1/.config/systemd/user/owl-forward-proxy.service"
+PROXY_PY="$HOME/.owl-agent/forward_proxy.py"
+SERVICE_FILE="$HOME/.config/systemd/user/owl-forward-proxy.service"
 
 # Styling
 BOLD='\033[1m'
@@ -48,7 +48,7 @@ step "2" "Patching $PROXY_PY to prioritize UPSTREAM_PROXY..."
 python3 - << 'EOF'
 import sys
 
-filepath = "/home/x1/.owl-agent/forward_proxy.py"
+filepath = os.path.expanduser("~/.owl-agent/forward_proxy.py")
 
 with open(filepath, 'r') as f:
     code = f.read()
@@ -169,7 +169,7 @@ ok "Systemd configuration verified."
 # [4/5] Configure kiro-cli wrapper to use OWL Proxy
 # ═══════════════════════════════════════════════════════════════════════════
 step "4" "Configuring kiro-cli wrapper for OWL Proxy..."
-KIRO_WRAPPER="/home/x1/.owl-agent/kiro-cli"
+KIRO_WRAPPER="$HOME/.owl-agent/kiro-cli"
 if [[ -f "$KIRO_WRAPPER" ]]; then
     if ! grep -q "export HTTP_PROXY=" "$KIRO_WRAPPER"; then
         # Recreate the wrapper with explicit proxy configuration
