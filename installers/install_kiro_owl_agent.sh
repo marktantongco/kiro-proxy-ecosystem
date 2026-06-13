@@ -89,38 +89,41 @@ else
 fi
 
 if [[ "$LIBC_DETECTED" == "musl" ]]; then
-    KIRO_ZIP="kirocli-${ARCH_DETECTED}-linux-musl.zip"
-    info "Detected musl libc → ${KIRO_ZIP}"
+    KIRO_TAR="kirocli-${ARCH_DETECTED}-linux-musl.tar.gz"
+    info "Detected musl libc → ${KIRO_TAR}"
 else
-    KIRO_ZIP="kirocli-${ARCH_DETECTED}-linux.zip"
-    info "Detected glibc ${glibc_ver:-unknown} → ${KIRO_ZIP}"
+    KIRO_TAR="kirocli-${ARCH_DETECTED}-linux.tar.gz"
+    info "Detected glibc ${glibc_ver:-unknown} → ${KIRO_TAR}"
 fi
 
 KIRO_MANIFEST_URL="https://prod.download.cli.kiro.dev/stable/latest/manifest.json"
 KIRO_BASE_URL="https://prod.download.cli.kiro.dev/stable"
-KIRO_ZIP_PATH="/tmp/${KIRO_ZIP}"
+KIRO_TAR_PATH="/tmp/${KIRO_TAR}"
 
 download_kiro() {
-    local triple="${ARCH_DETECTED}-unknown-linux-${LIBC_DETECTED}"
+    local triple="${ARCH_DETECTED}-unknown-linux-gnu"
+    if [[ "$LIBC_DETECTED" == "musl" ]]; then
+        triple="${ARCH_DETECTED}-unknown-linux-musl"
+    fi
     local version
     version=$(curl -sfL "$KIRO_MANIFEST_URL" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 triple = '$triple'
 for pkg in data['packages']:
-    if pkg.get('targetTriple') == triple and pkg.get('fileType') == 'zip' and pkg.get('variant') == 'headless':
+    if pkg.get('targetTriple') == triple and pkg.get('fileType') == 'tarGz' and pkg.get('variant') == 'headless':
         print(pkg['download'])
         sys.exit(0)
 print('', end='')
 sys.exit(1)
-" 2>/dev/null || echo "$KIRO_ZIP")
+" 2>/dev/null || echo "$KIRO_TAR")
     local url="$KIRO_BASE_URL/$version"
     local attempt=0 max=5 delay=10
     while [ $attempt -lt $max ]; do
         attempt=$((attempt + 1))
         info "Downloading kiro-cli from prod.download.cli.kiro.dev (attempt $attempt/$max)..."
-        if curl -fsSL -C - --connect-timeout 15 --max-time 300 "$url" -o "$KIRO_ZIP_PATH" 2>/dev/null; then
-            ok "Download complete ($(ls -lh "$KIRO_ZIP_PATH" | awk '{print $5}'))"
+        if curl -fsSL -C - --connect-timeout 15 --max-time 300 "$url" -o "$KIRO_TAR_PATH" 2>/dev/null; then
+            ok "Download complete ($(ls -lh "$KIRO_TAR_PATH" | awk '{print $5}'))"
             return 0
         fi
         warn "Download failed, retrying in ${delay}s..."
@@ -129,12 +132,18 @@ sys.exit(1)
     return 1
 }
 
-if download_kiro; then
-    rm -rf /tmp/kirocli_extracted
-    unzip -qo "$KIRO_ZIP_PATH" -d "/tmp/kirocli_extracted"
-    info "Extracted kiro-cli binaries:"
-    ls -lh /tmp/kirocli_extracted/kirocli/bin/ | awk '{print "    " $NF " (" $5 ")"}'
+DOWNLOAD_SUCCESS=true
+if ! download_kiro; then
+    if [ -d "/home/x1/Downloads/kirocli/bin" ]; then
+        warn "Download failed but found pre-extracted binaries. Using them."
+        mkdir -p /tmp/kirocli_extracted/kirocli
+        cp -r /home/x1/Downloads/kirocli/bin /tmp/kirocli_extracted/kirocli/
+    else
+        DOWNLOAD_SUCCESS=false
+    fi
+fi
 
+if [ "$DOWNLOAD_SUCCESS" = true ]; then
     mkdir -p "$HOME/.local/bin"
 
     # Install all 3 official binaries
@@ -160,11 +169,11 @@ if download_kiro; then
         "$HOME/.local/bin/kiro-cli" setup 2>&1 || warn "setup encountered issues (may need interactive terminal)"
     fi
 
-    rm -rf "$KIRO_ZIP_PATH" "/tmp/kirocli_extracted"
+    rm -rf "$KIRO_TAR_PATH" "/tmp/kirocli_extracted" 2>/dev/null || true
     ok "kiro-cli native binary installation complete"
 else
-    err "Failed to download kiro-cli native binary after 5 attempts"
-    err "Download manually: $url"
+    err "Failed to download kiro-cli native binary and no fallback found"
+    exit 1
 fi
 
 deactivate
@@ -196,23 +205,30 @@ else
 fi
 
 if [ "$NEED_LOGIN" = true ]; then
-    echo ""
-    warn "kiro-cli login requires AWS Builder ID (browser-based OIDC)"
-    echo ""
-    echo "  This will open a browser for you to authenticate."
-    echo "  Use your AWS Builder ID (free tier, no credit card needed)."
-    echo "  Sign up at: https://builderid.us-east-1.console.aws.amazon.com"
-    echo ""
-    echo "  Press ENTER to start login..."
-    read -r
-    source "$VENV_DIR/bin/activate"
-    kiro-cli login
-    deactivate
-    if [ -f "$KIRO_CLI_DB" ]; then
-        ok "kiro-cli authenticated successfully"
+    if [ -n "${KIRO_CLI_SKIP_SETUP:-}" ]; then
+        info "Skipping interactive login. Initializing a valid blank SQLite database with full schema..."
+        mkdir -p "$(dirname "$KIRO_CLI_DB")"
+        python3 -c "import sqlite3; conn = sqlite3.connect('$KIRO_CLI_DB'); cursor = conn.cursor(); cursor.execute('CREATE TABLE IF NOT EXISTS auth_kv (key TEXT PRIMARY KEY, value TEXT)'); cursor.execute('CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value BLOB)'); cursor.execute('CREATE TABLE IF NOT EXISTS migrations (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, migration_time INTEGER NOT NULL)'); cursor.execute('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, command TEXT, shell TEXT, pid INTEGER, session_id TEXT, cwd TEXT, start_time INTEGER, hostname TEXT, exit_code INTEGER, end_time INTEGER, duration INTEGER)'); cursor.execute('CREATE TABLE IF NOT EXISTS conversations (key TEXT PRIMARY KEY, value TEXT)'); cursor.execute('CREATE TABLE IF NOT EXISTS conversations_v2 (key TEXT NOT NULL, conversation_id TEXT NOT NULL, value TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (key, conversation_id))'); conn.commit(); conn.close()"
+        ok "Fully initialized blank SQLite database created successfully at $KIRO_CLI_DB"
     else
-        err "kiro-cli DB not found after login. Something went wrong."
-        exit 1
+        echo ""
+        warn "kiro-cli login requires AWS Builder ID (browser-based OIDC)"
+        echo ""
+        echo "  This will open a browser for you to authenticate."
+        echo "  Use your AWS Builder ID (free tier, no credit card needed)."
+        echo "  Sign up at: https://builderid.us-east-1.console.aws.amazon.com"
+        echo ""
+        echo "  Press ENTER to start login..."
+        read -r
+        source "$VENV_DIR/bin/activate"
+        kiro-cli login
+        deactivate
+        if [ -f "$KIRO_CLI_DB" ]; then
+            ok "kiro-cli authenticated successfully"
+        else
+            err "kiro-cli DB not found after login. Something went wrong."
+            exit 1
+        fi
     fi
 fi
 

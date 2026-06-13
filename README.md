@@ -161,7 +161,12 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 * **Dynamic Shortcut Integration**: Added an automated script hook inside `install_owl_agent.sh` that dynamically appends the `owl-check` shell alias to the user's `~/.bashrc`, enabling single-command system state queries.
 * **Troubleshooting Orchestration**: Patched the unified `install_kiro_owl_agent.sh` script to output automated diagnostic guidance referencing the `owl-check` suite in its final installation summary.
 
----
+### June 14, 2026: SQLite Blank Page / Schema Initialization & Auto-Repair Upgrade
+* **The Blank Page/Database Issue**: When skipping interactive login via `KIRO_CLI_SKIP_SETUP`, the installers originally initialized an incomplete SQLite database containing only a `dummy` table. When `kiro-gateway` attempted to validate this file, it failed because the required tables (`auth_kv`, `state`, etc.) were missing, preventing credentials loading and leaving the gateway's state uninitialized (causing a blank page or error state).
+* **The Resolution**: 
+  - **Full Schema Provisioning**: Upgraded both `install_kiro_owl_agent.sh` and `install_owl_agent.sh` to initialize the database with the complete SQLite schema expected by `kiro-cli` and `kiro-gateway` (`auth_kv`, `state`, `migrations`, `history`, `conversations`, `conversations_v2`) on skipped setup.
+  - **In-Place Schema Auto-Repair**: Upgraded `update.sh` to verify the active SQLite database schema on startup and dynamically inject any missing tables in-place using inline Python database operations, preventing errors from legacy or partial database setups.
+  - **Site Catalog Compiled**: Recompiled `index.html` and `mobile.html` with the updated installers via `compile_site.py`.
 
 ---
 

@@ -548,38 +548,40 @@ else
 fi
 
 if [[ "$LIBC_DETECTED" == "musl" ]]; then
-    KIRO_ZIP="kirocli-${ARCH_DETECTED}-linux-musl.zip"
-    echo "   Detected musl libc → ${KIRO_ZIP}"
+    KIRO_TAR="kirocli-${ARCH_DETECTED}-linux-musl.tar.gz"
+    echo "   Detected musl libc → ${KIRO_TAR}"
 else
-    KIRO_ZIP="kirocli-${ARCH_DETECTED}-linux.zip"
-    echo "   Detected glibc ${glibc_ver:-unknown} → ${KIRO_ZIP}"
+    KIRO_TAR="kirocli-${ARCH_DETECTED}-linux.tar.gz"
+    echo "   Detected glibc ${glibc_ver:-unknown} → ${KIRO_TAR}"
 fi
 
 KIRO_MANIFEST_URL="https://prod.download.cli.kiro.dev/stable/latest/manifest.json"
 KIRO_BASE_URL="https://prod.download.cli.kiro.dev/stable"
-KIRO_ZIP_PATH="/tmp/${KIRO_ZIP}"
+KIRO_TAR_PATH="/tmp/${KIRO_TAR}"
 
 download_kiro() {
-    local triple="${ARCH_DETECTED}-unknown-linux-${LIBC_DETECTED}"
+    local libc_suffix="gnu"
+    [ "$LIBC_DETECTED" = "musl" ] && libc_suffix="musl"
+    local triple="${ARCH_DETECTED}-unknown-linux-${libc_suffix}"
     local version
     version=$(curl -sfL "$KIRO_MANIFEST_URL" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 triple = '$triple'
 for pkg in data['packages']:
-    if pkg.get('targetTriple') == triple and pkg.get('fileType') == 'zip' and pkg.get('variant') == 'headless':
+    if pkg.get('targetTriple') == triple and pkg.get('fileType') == 'tarGz' and pkg.get('variant') == 'headless':
         print(pkg['download'])
         sys.exit(0)
 print('', end='')
 sys.exit(1)
-" 2>/dev/null || echo "$KIRO_ZIP")
+" 2>/dev/null || echo "$KIRO_TAR")
     local url="$KIRO_BASE_URL/$version"
     local attempt=0 max=5 delay=10
     while [ $attempt -lt $max ]; do
         attempt=$((attempt + 1))
         echo "   Downloading (attempt $attempt/$max)..."
-        if curl -fsSL -C - --connect-timeout 15 --max-time 300 "$url" -o "$KIRO_ZIP_PATH" 2>/dev/null; then
-            echo "   Download complete ($(ls -lh "$KIRO_ZIP_PATH" | awk '{print $5}'))"
+        if curl -fsSL -C - --connect-timeout 15 --max-time 300 "$url" -o "$KIRO_TAR_PATH" 2>/dev/null; then
+            echo "   Download complete ($(ls -lh "$KIRO_TAR_PATH" | awk '{print $5}'))"
             return 0
         fi
         echo "   Failed, retrying in ${delay}s..."
@@ -590,7 +592,8 @@ sys.exit(1)
 
 if download_kiro; then
     rm -rf /tmp/kirocli_extracted
-    unzip -qo "$KIRO_ZIP_PATH" -d "/tmp/kirocli_extracted"
+    mkdir -p /tmp/kirocli_extracted
+    tar -xzf "$KIRO_TAR_PATH" -C "/tmp/kirocli_extracted"
     echo "   Extracted kiro-cli binaries:"
     ls -lh /tmp/kirocli_extracted/kirocli/bin/
 
@@ -620,9 +623,18 @@ if download_kiro; then
     if [ -z "${KIRO_CLI_SKIP_SETUP:-}" ] && [ -f "$HOME/.local/bin/kiro-cli" ]; then
         echo "   Running kiro-cli setup..."
         "$HOME/.local/bin/kiro-cli" setup 2>&1 || echo "   ⚠️  setup encountered issues (may need interactive terminal)"
+    else
+        # If skipped, initialize a valid blank SQLite database
+        KIRO_CLI_DB="$HOME/.local/share/kiro-cli/data.sqlite3"
+        if [ ! -f "$KIRO_CLI_DB" ]; then
+            echo "   Initializing a valid blank SQLite database with proper schema..."
+            mkdir -p "$(dirname "$KIRO_CLI_DB")"
+            python3 -c "import sqlite3; conn = sqlite3.connect('$KIRO_CLI_DB'); cursor = conn.cursor(); cursor.execute('CREATE TABLE IF NOT EXISTS auth_kv (key TEXT PRIMARY KEY, value TEXT)'); cursor.execute('CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value BLOB)'); cursor.execute('CREATE TABLE IF NOT EXISTS migrations (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, migration_time INTEGER NOT NULL)'); cursor.execute('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, command TEXT, shell TEXT, pid INTEGER, session_id TEXT, cwd TEXT, start_time INTEGER, hostname TEXT, exit_code INTEGER, end_time INTEGER, duration INTEGER)'); cursor.execute('CREATE TABLE IF NOT EXISTS conversations (key TEXT PRIMARY KEY, value TEXT)'); cursor.execute('CREATE TABLE IF NOT EXISTS conversations_v2 (key TEXT NOT NULL, conversation_id TEXT NOT NULL, value TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (key, conversation_id))'); conn.commit(); conn.close()"
+            echo "   ✅ Empty SQLite database created successfully at $KIRO_CLI_DB"
+        fi
     fi
 
-    rm -rf "$KIRO_ZIP_PATH" "/tmp/kirocli_extracted"
+    rm -rf "$KIRO_TAR_PATH" "/tmp/kirocli_extracted"
     echo "   ✅ kiro-cli native binary installation complete"
 else
     echo "   ⚠️  kiro-cli native binary download failed after $max attempts."

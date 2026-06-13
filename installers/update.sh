@@ -350,6 +350,41 @@ fi
 
 # Check kiro-cli auth session
 if [ -f "$KIRO_CLI_DB" ]; then
+    # Verify and auto-repair missing schema tables
+    REPAIRED=$(python3 -c "
+import sqlite3
+conn = sqlite3.connect('$KIRO_CLI_DB')
+cursor = conn.cursor()
+tables = ['auth_kv', 'state', 'migrations', 'history', 'conversations', 'conversations_v2']
+created = []
+for t in tables:
+    cursor.execute(f\"SELECT name FROM sqlite_master WHERE type='table' AND name='{t}'\")
+    if not cursor.fetchone():
+        if t == 'auth_kv':
+            cursor.execute('CREATE TABLE auth_kv (key TEXT PRIMARY KEY, value TEXT)')
+        elif t == 'state':
+            cursor.execute('CREATE TABLE state (key TEXT PRIMARY KEY, value BLOB)')
+        elif t == 'migrations':
+            cursor.execute('CREATE TABLE migrations (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, migration_time INTEGER NOT NULL)')
+        elif t == 'history':
+            cursor.execute('CREATE TABLE history (id INTEGER PRIMARY KEY, command TEXT, shell TEXT, pid INTEGER, session_id TEXT, cwd TEXT, start_time INTEGER, hostname TEXT, exit_code INTEGER, end_time INTEGER, duration INTEGER)')
+        elif t == 'conversations':
+            cursor.execute('CREATE TABLE conversations (key TEXT PRIMARY KEY, value TEXT)')
+        elif t == 'conversations_v2':
+            cursor.execute('CREATE TABLE conversations_v2 (key TEXT NOT NULL, conversation_id TEXT NOT NULL, value TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (key, conversation_id))')
+        created.append(t)
+if created:
+    conn.commit()
+    print('yes')
+else:
+    print('no')
+conn.close()
+" 2>/dev/null || echo "error")
+
+    if [ "$REPAIRED" = "yes" ]; then
+        ok "Auto-repaired missing schema tables in $KIRO_CLI_DB"
+    fi
+
     DB_SIZE=$(stat -c%s "$KIRO_CLI_DB" 2>/dev/null || stat -f%z "$KIRO_CLI_DB" 2>/dev/null || echo "0")
     if [ "$DB_SIZE" -gt 1000 ]; then
         ok "kiro-cli auth session found (${DB_SIZE} bytes)"
@@ -358,7 +393,10 @@ if [ -f "$KIRO_CLI_DB" ]; then
         info "Re-auth: source $VENV_DIR/bin/activate && kiro-cli login && deactivate"
     fi
 else
-    warn "kiro-cli not authenticated yet — run: kiro-cli login"
+    warn "kiro-cli database not found. Initializing a valid blank database..."
+    mkdir -p "$(dirname "$KIRO_CLI_DB")"
+    python3 -c "import sqlite3; conn = sqlite3.connect('$KIRO_CLI_DB'); cursor = conn.cursor(); cursor.execute('CREATE TABLE IF NOT EXISTS auth_kv (key TEXT PRIMARY KEY, value TEXT)'); cursor.execute('CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value BLOB)'); cursor.execute('CREATE TABLE IF NOT EXISTS migrations (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, migration_time INTEGER NOT NULL)'); cursor.execute('CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, command TEXT, shell TEXT, pid INTEGER, session_id TEXT, cwd TEXT, start_time INTEGER, hostname TEXT, exit_code INTEGER, end_time INTEGER, duration INTEGER)'); cursor.execute('CREATE TABLE IF NOT EXISTS conversations (key TEXT PRIMARY KEY, value TEXT)'); cursor.execute('CREATE TABLE IF NOT EXISTS conversations_v2 (key TEXT NOT NULL, conversation_id TEXT NOT NULL, value TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (key, conversation_id))'); conn.commit(); conn.close()"
+    ok "Fully initialized blank SQLite database created successfully at $KIRO_CLI_DB"
 fi
 
 echo ""
