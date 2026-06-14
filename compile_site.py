@@ -3,6 +3,11 @@ import os
 # Define the target files, categories, and relationships
 files_to_compile = [
     {
+        "path": "scripts/backup_restore_proxy.sh",
+        "category": "Backup & Restore",
+        "relation": "Self-extracting restore installer script that recovers the systemd user units, environment wrappers, and checks runtime health."
+    },
+    {
         "path": "scripts/validate_ecosystem.sh",
         "category": "Triage Script",
         "relation": "Main self-healing suite. Resolves Bash read-only errors, terminates background collisions, and verifies pings."
