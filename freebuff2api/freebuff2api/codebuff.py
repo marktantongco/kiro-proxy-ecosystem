@@ -1,0 +1,1179 @@
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+import os
+import time
+from dataclasses import dataclass, field, replace
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, AsyncIterator
+from urllib.parse import urlparse
+
+import httpx
+
+from .config import HAR_BROWSER_USER_AGENT, Settings
+from .logging_config import redact_headers, render_debug
+from .models import agent_validation_payload
+
+
+logger = logging.getLogger("freebuff2api.codebuff")
+
+CODEBUFF_ACCEPT_ENCODING = "gzip, deflate"
+CODEBUFF_JSON_USER_AGENT = "Bun/1.3.11"
+FREEBUFF_CLI_USER_AGENT = "Freebuff-CLI/0.0.105"
+# Must match the exact signature the Freebuff CLI sends: the upstream
+# free_mode_cli_required gate fingerprints requests on this user-agent string.
+# Mirrors freebuff-go/client.go cliUserAgent (provider-utils/3.0.25).
+CHAT_COMPLETIONS_USER_AGENT = (
+    "ai-sdk/openai-compatible/0.0.0-test/codebuff "
+    "ai-sdk/provider-utils/3.0.25 runtime/browser"
+)
+
+
+class CodebuffError(RuntimeError):
+    def __init__(
+        self,
+        message: str,
+        status_code: int = 502,
+        *,
+        is_rate_limit: bool = False,
+        reset_at: str | None = None,
+        retry_after_ms: int | None = None,
+        is_session_error: bool = False,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.is_rate_limit = is_rate_limit
+        self.reset_at = reset_at
+        self.retry_after_ms = retry_after_ms
+        self.is_session_error = is_session_error
+
+
+@dataclass
+class FreebuffSession:
+    instance_id: str
+    model: str
+    expires_at: str | None = None
+    remaining_ms: int | None = None
+
+    @property
+    def is_fresh(self) -> bool:
+        return self.remaining_ms is None or self.remaining_ms > 60_000
+
+
+@dataclass
+class FreebuffRun:
+    run_id: str
+    agent_id: str
+    started_at: str
+    child_run_id: str | None = None
+    chat_run_id: str | None = None
+    chat_started_at: str | None = None
+
+    @property
+    def payload_run_id(self) -> str:
+        return self.chat_run_id or self.run_id
+
+
+@dataclass
+class FreebuffSessionLease:
+    session: FreebuffSession
+    _lock: asyncio.Lock
+    _closed: bool = False
+
+    @property
+    def sessions(self):
+        return self._pool._accounts[self._account_index].sessions
+
+    async def aclose(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        self._lock.release()
+
+
+@dataclass
+class RateLimitState:
+    blocked_models: dict[str, float] = field(default_factory=dict)
+    last_error_at: float | None = None
+
+
+class CodebuffClient:
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self._client = httpx.AsyncClient(
+            timeout=httpx.Timeout(settings.request_timeout, read=300.0),
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
+            follow_redirects=True,
+            proxy=settings.upstream_proxy_url,
+            trust_env=False,
+        )
+        self._agents_validated = False
+        self._validate_lock = asyncio.Lock()
+
+    async def aclose(self) -> None:
+        await self._client.aclose()
+
+    def _headers(
+        self,
+        *,
+        json_body: bool = False,
+        user_agent: str = CODEBUFF_JSON_USER_AGENT,
+        require_auth: bool = True,
+        extra: dict[str, str] | None = None,
+    ) -> dict[str, str]:
+        if require_auth and not self.settings.codebuff_token:
+            raise CodebuffError("FREEBUFF_TOKEN or CODEBUFF_TOKEN is required", 500)
+
+        headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": CODEBUFF_ACCEPT_ENCODING,
+            "Connection": "keep-alive",
+            "Host": _host_header(self.settings.codebuff_api_url),
+            "User-Agent": user_agent,
+        }
+        if require_auth:
+            headers["Authorization"] = f"Bearer {self.settings.codebuff_token}"
+        if json_body:
+            headers["Content-Type"] = "application/json"
+        if extra:
+            headers.update(extra)
+        return headers
+
+    async def _json(
+        self,
+        method: str,
+        path: str,
+        *,
+        body: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        url = f"{self.settings.codebuff_api_url}{path}"
+        request_headers = headers or self._headers(json_body=body is not None)
+        try:
+            response = await self._client.request(
+                method,
+                url,
+                json=body,
+                headers=request_headers,
+            )
+        except httpx.RequestError as error:
+            raise _network_error(method, url, error) from error
+        if self.settings.debug:
+            logger.debug(
+                "upstream json request method=%s url=%s headers=%s body=%s",
+                method,
+                url,
+                redact_headers(request_headers),
+                render_debug(body, self.settings.log_body_chars),
+            )
+            logger.debug(
+                "upstream json response status=%s body=%s",
+                response.status_code,
+                render_debug(response.text, self.settings.log_body_chars),
+            )
+        if response.status_code >= 400:
+            raise _upstream_error(response)
+        if not response.content:
+            return {}
+        return response.json()
+
+    async def validate_agents(self) -> None:
+        if self._agents_validated:
+            return
+        async with self._validate_lock:
+            if self._agents_validated:
+                return
+            try:
+                data = await self._json(
+                    "POST",
+                    "/api/agents/validate",
+                    body=agent_validation_payload(),
+                    headers=self._headers(json_body=True, require_auth=False),
+                )
+            except CodebuffError:
+                logger.warning(
+                    "agent validation failed; continuing with server configs",
+                    exc_info=self.settings.debug,
+                )
+                self._agents_validated = True
+                return
+            error_count = int(data.get("errorCount") or 0)
+            if error_count:
+                logger.warning(
+                    "agent validation returned errors count=%s body=%s",
+                    error_count,
+                    render_debug(data, self.settings.log_body_chars),
+                )
+            else:
+                logger.info(
+                    "agent validation completed configs=%s",
+                    len(data.get("configs") or []),
+                )
+            self._agents_validated = True
+
+    async def health(self) -> dict[str, Any]:
+        return await self._json(
+            "GET",
+            "/api/healthz",
+            headers=self._headers(require_auth=False),
+        )
+
+    async def get_session(self, instance_id: str | None = None) -> dict[str, Any]:
+        headers_extra = {}
+        if instance_id:
+            headers_extra["x-freebuff-instance-id"] = instance_id
+        return await self._json(
+            "GET",
+            "/api/v1/freebuff/session",
+            headers=self._headers(extra=headers_extra),
+        )
+
+    async def create_session(self, model: str) -> FreebuffSession:
+        data = await self._json(
+            "POST",
+            "/api/v1/freebuff/session",
+            headers=self._headers(extra={"x-freebuff-model": model}),
+        )
+        if data.get("status") == "queued":
+            return await self._wait_for_active_session(data, model)
+        return self._session_from_data(data, model)
+
+    def _session_from_data(
+        self,
+        data: dict[str, Any],
+        model: str,
+        instance_id: str | None = None,
+    ) -> FreebuffSession:
+        resolved_instance_id = data.get("instanceId") or instance_id
+        if data.get("status") != "active" or not resolved_instance_id:
+            raise CodebuffError(f"Freebuff session is not active: {data}", 502)
+        return FreebuffSession(
+            instance_id=resolved_instance_id,
+            model=data.get("model") or model,
+            expires_at=data.get("expiresAt"),
+            remaining_ms=data.get("remainingMs"),
+        )
+
+    async def _wait_for_active_session(
+        self,
+        data: dict[str, Any],
+        model: str,
+    ) -> FreebuffSession:
+        instance_id = data.get("instanceId")
+        if not instance_id:
+            raise CodebuffError(f"Freebuff queued session id missing: {data}", 502)
+
+        deadline = time.monotonic() + self.settings.request_timeout
+        attempts = 0
+        while data.get("status") == "queued":
+            logger.info(
+                "freebuff session queued model=%s instance_id=%s position=%s estimated_wait_ms=%s",
+                model,
+                instance_id,
+                data.get("position"),
+                data.get("estimatedWaitMs"),
+            )
+            if time.monotonic() >= deadline:
+                raise CodebuffError(
+                    f"Freebuff session did not become active before timeout: {data}",
+                    502,
+                )
+            if attempts:
+                await asyncio.sleep(_queue_poll_delay(data.get("estimatedWaitMs")))
+            data = await self.get_session(instance_id)
+            attempts += 1
+
+        return self._session_from_data(data, model, instance_id=instance_id)
+
+    async def delete_session(self) -> None:
+        await self._json(
+            "DELETE",
+            "/api/v1/freebuff/session",
+            headers=self._headers(),
+        )
+        logger.info("deleted active freebuff session")
+
+    async def get_streak(self) -> dict[str, Any]:
+        data = await self._json(
+            "GET",
+            "/api/v1/freebuff/streak",
+            headers=self._headers(),
+        )
+        logger.info(
+            "freebuff streak streak=%s today_used=%s",
+            data.get("streak"),
+            data.get("todayUsed"),
+        )
+        return data
+
+    async def request_ads(
+        self,
+        provider: str,
+        messages: list[dict[str, Any]] | None = None,
+        surface: str | None = None,
+    ) -> dict[str, Any]:
+        body = {
+            "provider": provider,
+            "messages": _ad_messages(messages),
+            "sessionId": self.settings.session_id,
+            "device": {
+                "os": self.settings.os_name,
+                "timezone": self.settings.timezone,
+                "locale": self.settings.locale,
+            },
+            "userAgent": HAR_BROWSER_USER_AGENT,
+        }
+        if surface:
+            body["surface"] = surface
+        return await self._json(
+            "POST",
+            "/api/v1/ads",
+            body=body,
+            headers=self._headers(
+                json_body=True,
+                user_agent=FREEBUFF_CLI_USER_AGENT,
+            ),
+        )
+
+    async def request_ad_chain(
+        self,
+        messages: list[dict[str, Any]] | None = None,
+        *,
+        surface: str | None = None,
+    ) -> None:
+        for provider in self.settings.ad_providers:
+            try:
+                ads_data = await self.request_ads(
+                    provider,
+                    messages=messages,
+                    surface=surface,
+                )
+                ads = ads_data.get("ads") or []
+                ad = ads[0] if ads else None
+                logger.info(
+                    "ads provider=%s messages=%s count=%s selected=%s",
+                    provider,
+                    len(messages or []),
+                    len(ads),
+                    bool(ad),
+                )
+                if not ad:
+                    continue
+                await self.report_zeroclick_impressions(
+                    list(ad.get("impressionIds") or [])
+                )
+                await self.report_codebuff_impression(ad.get("impUrl") or "")
+                return
+            except CodebuffError as error:
+                logger.warning(
+                    "ads provider=%s failed; continuing without blocking chat: %s",
+                    provider,
+                    error,
+                    exc_info=self.settings.debug,
+                )
+
+    async def report_zeroclick_impressions(self, ids: list[str]) -> None:
+        if not ids:
+            return
+        url = f"{self.settings.zeroclick_api_url}/api/v2/impressions"
+        try:
+            response = await self._client.post(
+                url,
+                json={"ids": ids},
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "*/*",
+                    "User-Agent": CODEBUFF_JSON_USER_AGENT,
+                },
+            )
+        except httpx.RequestError as error:
+            raise _network_error("POST", url, error) from error
+        if self.settings.debug:
+            logger.debug(
+                "zeroclick impression ids=%s status=%s body=%s",
+                ids,
+                response.status_code,
+                render_debug(response.text, self.settings.log_body_chars),
+            )
+        if response.status_code >= 400:
+            raise CodebuffError(
+                f"Zeroclick impression failed: {response.status_code} {response.text[:500]}",
+                502,
+            )
+
+    async def report_codebuff_impression(self, imp_url: str) -> None:
+        if not imp_url:
+            return
+        await self._json(
+            "POST",
+            "/api/v1/ads/impression",
+            body={"impUrl": imp_url, "mode": "LITE"},
+            headers=self._headers(
+                json_body=True,
+                user_agent=FREEBUFF_CLI_USER_AGENT,
+            ),
+        )
+
+    async def start_run(
+        self,
+        agent_id: str,
+        ancestor_run_ids: list[str] | None = None,
+    ) -> str:
+        data = await self._json(
+            "POST",
+            "/api/v1/agent-runs",
+            body={
+                "action": "START",
+                "agentId": agent_id,
+                "ancestorRunIds": ancestor_run_ids or [],
+            },
+        )
+        run_id = data.get("runId")
+        if not run_id:
+            raise CodebuffError(f"Codebuff run id missing: {data}", 502)
+        logger.info(
+            "agent run started agent_id=%s run_id=%s ancestors=%s",
+            agent_id,
+            run_id,
+            ancestor_run_ids or [],
+        )
+        return run_id
+
+    async def record_run_step(
+        self,
+        run_id: str,
+        *,
+        step_number: int,
+        message_id: str | None,
+        start_time: str,
+        child_run_ids: list[str] | None = None,
+    ) -> None:
+        await self._json(
+            "POST",
+            f"/api/v1/agent-runs/{run_id}/steps",
+            body={
+                "stepNumber": step_number,
+                "credits": 0,
+                "childRunIds": child_run_ids or [],
+                "messageId": message_id,
+                "status": "completed",
+                "startTime": start_time,
+            },
+        )
+        logger.info(
+            "agent run step recorded run_id=%s step=%s message_id=%s children=%s",
+            run_id,
+            step_number,
+            message_id,
+            child_run_ids or [],
+        )
+
+    async def finish_run(self, run_id: str, *, total_steps: int) -> None:
+        await self._json(
+            "POST",
+            "/api/v1/agent-runs",
+            body={
+                "action": "FINISH",
+                "runId": run_id,
+                "status": "completed",
+                "totalSteps": total_steps,
+                "directCredits": 0,
+                "totalCredits": 0,
+            },
+        )
+        logger.info("agent run finished run_id=%s total_steps=%s", run_id, total_steps)
+
+    async def chat_events(self, payload: dict[str, Any]) -> AsyncIterator[str]:
+        url = f"{self.settings.codebuff_api_url}/api/v1/chat/completions"
+        extra_headers: dict[str, str] = {}
+        if self.settings.acting_user_id:
+            # The upstream CLI gate requires the acting user id header on every
+            # chat request (freebuff-go sends it from the CLI credential store).
+            extra_headers["x-freebuff-acting-user-id"] = self.settings.acting_user_id
+        request_headers = self._headers(
+            json_body=True,
+            user_agent=CHAT_COMPLETIONS_USER_AGENT,
+            extra=extra_headers or None,
+        )
+        try:
+            async with self._client.stream(
+                "POST",
+                url,
+                json=payload,
+                headers=request_headers,
+            ) as response:
+                if self.settings.debug:
+                    logger.debug(
+                        "chat stream request url=%s headers=%s payload=%s",
+                        url,
+                        redact_headers(request_headers),
+                        render_debug(payload, self.settings.log_body_chars),
+                    )
+                    logger.debug(
+                        "chat stream response status=%s headers=%s",
+                        response.status_code,
+                        redact_headers(dict(response.headers)),
+                    )
+                if response.status_code >= 400:
+                    text = await response.aread()
+                    raise _upstream_error(
+                        response,
+                        body=text,
+                        prefix="Codebuff chat failed",
+                    )
+                async for line in response.aiter_lines():
+                    if self.settings.debug:
+                        logger.debug(
+                            "chat stream line=%s",
+                            render_debug(line, self.settings.log_body_chars),
+                        )
+                    yield line
+        except httpx.RequestError as error:
+            raise _network_error("POST", url, error) from error
+
+
+class SessionManager:
+    def __init__(self, client: CodebuffClient, settings: Settings) -> None:
+        self.client = client
+        self.settings = settings
+        self._sessions: dict[str, FreebuffSession] = {}
+        self._lock = asyncio.Lock()
+        # BUG C: per-model timestamp of last invalidate() call. _delete_locked_session
+        # refuses to silently adopt an upstream "active" session inside this safety
+        # window, because Codebuff servers can echo back the same instance_id from
+        # discovery GETs even after it has actually been superseded — re-adopting it
+        # would let the optimistic cache refill with a doomed session.
+        self._last_invalidated_at: dict[str, float] = {}
+        # BUG B: per-model timestamp of last upstream verification of a cached
+        # session. Optimistic reuse skips the GET round-trip inside this window
+        # (~30s); outside it, _ensure_session_locked does a lightweight GET with
+        # the cached instance_id to confirm Codebuff still considers it active
+        # before reusing the cache.
+        self._verified_at: dict[str, float] = {}
+        # Safety window after invalidate() during which _delete_locked_session
+        # must NOT adopt any active session discovered upstream; forces the
+        # caller down the full create-session path instead.
+        self._invalidate_safety_seconds: float = 60.0
+        # Verify window: optimistic reuse does at most one upstream GET per
+        # model inside this period. Bursts of chats within the window
+        # amortize the verify cost.
+        self._verify_window_seconds: float = 30.0
+
+    async def ensure_session(
+        self,
+        model: str,
+        messages: list[dict[str, Any]] | None = None,
+    ) -> FreebuffSession:
+        async with self._lock:
+            return await self._ensure_session_locked(model, messages)
+
+    async def acquire_session(
+        self,
+        model: str,
+        messages: list[dict[str, Any]] | None = None,
+    ) -> FreebuffSessionLease:
+        await self._lock.acquire()
+        try:
+            session = await self._ensure_session_locked(model, messages)
+        except Exception:
+            self._lock.release()
+            raise
+        return FreebuffSessionLease(session=session, _lock=self._lock)
+
+    async def _ensure_session_locked(
+        self,
+        model: str,
+        messages: list[dict[str, Any]] | None = None,
+    ) -> FreebuffSession:
+        cached = self._sessions.get(model)
+        if cached and cached.is_fresh:
+            now = time.monotonic()
+            last_verify = self._verified_at.get(model, 0.0)
+            # BUG B FIX: cheap optimistic reuse while inside the verify window;
+            # outside it, ask upstream with the cached instance_id so we can
+            # detect a "stale witness" where Codebuff has actually superseded
+            # the session but a discovery GET would still echo the same id.
+            if now - last_verify < self._verify_window_seconds:
+                logger.info(
+                    "optimistic reuse freebuff session model=%s instance_id=%s remaining_ms=%s",
+                    model,
+                    cached.instance_id,
+                    cached.remaining_ms,
+                )
+                return cached
+            self._verified_at[model] = now
+            try:
+                upstream_data = await self.client.get_session(
+                    instance_id=cached.instance_id
+                )
+            except CodebuffError as error:
+                logger.warning(
+                    "optimistic reuse verify failed (using cached best-effort) model=%s instance_id=%s error=%s",
+                    model,
+                    cached.instance_id,
+                    error,
+                )
+                return cached
+            upstream_instance = upstream_data.get("instanceId")
+            upstream_status = upstream_data.get("status")
+            if (
+                upstream_status == "active"
+                and upstream_instance == cached.instance_id
+            ):
+                logger.info(
+                    "optimistic reuse verified model=%s instance_id=%s remaining_ms=%s",
+                    model,
+                    cached.instance_id,
+                    cached.remaining_ms,
+                )
+                return cached
+            logger.warning(
+                "optimistic reuse rejected (stale witness) model=%s cached_instance=%s upstream_instance=%s upstream_status=%s",
+                model,
+                cached.instance_id,
+                upstream_instance,
+                upstream_status,
+            )
+            self._sessions.pop(model, None)
+            try:
+                await self.client.delete_session()
+            except CodebuffError:
+                pass
+
+        active_session = await self._delete_locked_session(model)
+        if active_session:
+            return active_session
+        await self._request_ads_and_streak(surface="waiting_room")
+
+        try:
+            session = await self.client.create_session(model)
+        except CodebuffError as error:
+            if "model_locked" not in str(error):
+                raise
+            logger.info(
+                "freebuff session locked during create; delete and retry model=%s",
+                model,
+            )
+            await self.client.delete_session()
+            self._sessions.clear()
+            await self._request_ads_and_streak(surface="waiting_room")
+            session = await self.client.create_session(model)
+        self._sessions[model] = session
+        logger.debug(
+            "created freebuff session model=%s instance_id=%s remaining_ms=%s",
+            model,
+            session.instance_id,
+            session.remaining_ms,
+        )
+        return session
+
+    async def _request_ads_and_streak(
+        self,
+        messages: list[dict[str, Any]] | None = None,
+        *,
+        surface: str | None = None,
+    ) -> None:
+        for provider in self.settings.ad_providers:
+            try:
+                ads_data = await self.client.request_ads(
+                    provider,
+                    messages=messages,
+                    surface=surface,
+                )
+                ads = ads_data.get("ads") or []
+                ad = ads[0] if ads else None
+                logger.info(
+                    "ads provider=%s messages=%s count=%s selected=%s",
+                    provider,
+                    len(messages or []),
+                    len(ads),
+                    bool(ad),
+                )
+                if not ad:
+                    continue
+                await self.client.get_streak()
+                await self.client.report_zeroclick_impressions(
+                    list(ad.get("impressionIds") or [])
+                )
+                await self.client.report_codebuff_impression(ad.get("impUrl") or "")
+                return
+            except CodebuffError as error:
+                logger.warning(
+                    "ads provider=%s failed; continuing without blocking chat: %s",
+                    provider,
+                    error,
+                    exc_info=self.settings.debug,
+                )
+
+    async def _delete_locked_session(
+        self,
+        requested_model: str,
+    ) -> FreebuffSession | None:
+        # BUG C FIX: refuse to silently adopt any upstream "active" session
+        # inside the invalidate safety window — Codebuff servers can echo back
+        # the same instance_id from discovery GETs even when the session has
+        # actually been superseded, which would refill the optimistic cache with
+        # a doomed session and reproduce the 409 loop. Forcing a fresh create
+        # path here is the only way to break the cycle.
+        last_inv = self._last_invalidated_at.get(requested_model, 0.0)
+        if last_inv and time.monotonic() - last_inv < self._invalidate_safety_seconds:
+            logger.info(
+                "skipping adopt during invalidate-safety window model=%s age_s=%.1f",
+                requested_model,
+                time.monotonic() - last_inv,
+            )
+            return None
+        try:
+            data = await self.client.get_session()
+        except CodebuffError:
+            logger.debug(
+                "could not inspect active freebuff session before create",
+                exc_info=self.settings.debug,
+            )
+            return None
+
+        if data.get("status") != "active":
+            return None
+
+        current_model = data.get("model")
+        instance_id = data.get("instanceId")
+        if current_model == requested_model and instance_id:
+            session = FreebuffSession(
+                instance_id=instance_id,
+                model=current_model,
+                expires_at=data.get("expiresAt"),
+                remaining_ms=data.get("remainingMs"),
+            )
+            self._sessions[requested_model] = session
+            logger.info(
+                "discovered active freebuff session model=%s instance_id=%s remaining_ms=%s",
+                requested_model,
+                session.instance_id,
+                session.remaining_ms,
+            )
+            return session
+
+        if not current_model or current_model == requested_model:
+            return None
+
+        logger.info(
+            "switch freebuff session current_model=%s requested_model=%s instance_id=%s",
+            current_model,
+            requested_model,
+            instance_id,
+        )
+        await self.client.delete_session()
+        self._sessions.clear()
+        return None
+
+    async def invalidate_session(
+        self, model: str, *, reason: str = "chat_failure"
+    ) -> None:
+        """Drop a cached session so the next request re-creates upstream.
+
+        Called when chat fails with session_model_mismatch / session_superseded /
+        session_expired so we don't keep returning a stale cached session.
+        Also deletes the upstream session so get_session() won't re-adopt it,
+        which would cause an infinite 409/410 loop.
+
+        BUG C: stamp _last_invalidated_at[model] so _delete_locked_session
+        refuses to silently adopt an upstream "active" session inside the
+        safety window — and reset _verified_at[model] so the next ensure
+        cycle does a fresh upstream GET to confirm the new session is real.
+        """
+        previous = self._sessions.pop(model, None)
+        self._last_invalidated_at[model] = time.monotonic()
+        self._verified_at[model] = 0.0
+        if previous is not None:
+            logger.info(
+                "invalidated cached freebuff session model=%s instance_id=%s reason=%s",
+                model,
+                previous.instance_id,
+                reason,
+            )
+        try:
+            await self.client.delete_session()
+            logger.info(
+                "deleted upstream freebuff session after invalidation model=%s reason=%s",
+                model,
+                reason,
+            )
+        except Exception:
+            logger.debug(
+                "could not delete upstream session (may already be dead) model=%s reason=%s",
+                model,
+                reason,
+                exc_info=True,
+            )
+
+
+@dataclass
+class CodebuffAccount:
+    client: CodebuffClient
+    sessions: SessionManager
+    busy: bool = False
+    rate_limit: RateLimitState = field(default_factory=RateLimitState)
+
+
+@dataclass
+class CodebuffAccountLease:
+    client: CodebuffClient
+    session: FreebuffSession
+    _session_lease: FreebuffSessionLease
+    _pool: CodebuffAccountPool
+    _account_index: int
+    _closed: bool = False
+
+    @property
+    def sessions(self):
+        return self._pool._accounts[self._account_index].sessions
+
+    async def aclose(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        await self._session_lease.aclose()
+        await self._pool.release(self._account_index)
+
+    def mark_rate_limited(self, model: str, reset_at: str | None) -> None:
+        self._pool.mark_rate_limited(self._account_index, model, reset_at)
+
+
+class CodebuffAccountPool:
+    def __init__(self, settings: Settings) -> None:
+        tokens = settings.codebuff_tokens or (None,)
+        self._accounts: list[CodebuffAccount] = []
+        for token in tokens:
+            account_settings = replace(settings, codebuff_token=token)
+            client = CodebuffClient(account_settings)
+            self._accounts.append(
+                CodebuffAccount(
+                    client=client,
+                    sessions=SessionManager(client, account_settings),
+                )
+            )
+        self._next_index = 0
+        self._condition = asyncio.Condition()
+        self._stats_file = Path(os.getenv("FREEBUFF2API_DATA_DIR") or str(Path.home() / ".freebuff2api")) / "account_stats.json"
+        self._account_stats = [
+            {"use_count": 0, "last_used_at": None, "last_model": None, "busy": False}
+            for _ in self._accounts
+        ]
+        self._last_reserved_index = -1
+        self._stats_lock = asyncio.Lock()
+
+    @property
+    def account_count(self) -> int:
+        return len(self._accounts)
+
+    def healthy_account_count(self) -> int:
+        """Accounts not currently rate-limit-quarantined (busy is transient, not unhealthy)."""
+        now = time.time()
+        count = 0
+        for account in self._accounts:
+            blocked = any(
+                until > now
+                for until in account.rate_limit.blocked_models.values()
+            )
+            if not blocked:
+                count += 1
+        return count
+
+    def busy_account_count(self) -> int:
+        return sum(1 for account in self._accounts if account.busy)
+
+    @property
+    def default_client(self) -> CodebuffClient:
+        return self._accounts[0].client
+
+    @property
+    def default_sessions(self) -> SessionManager:
+        return self._accounts[0].sessions
+
+    async def aclose(self) -> None:
+        await asyncio.gather(
+            *(account.client.aclose() for account in self._accounts),
+            return_exceptions=True,
+        )
+
+    async def _write_stats(self) -> None:
+        async with self._stats_lock:
+            data = {
+                "account_count": len(self._accounts),
+                "last_reserved_index": self._last_reserved_index,
+                "accounts": self._account_stats,
+            }
+            try:
+                self._stats_file.write_text(
+                    json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+            except Exception:
+                pass
+
+    async def acquire_session(
+        self,
+        model: str,
+        messages: list[dict[str, Any]] | None = None,
+    ) -> CodebuffAccountLease:
+        account_index = await self._reserve_account(model)
+        account = self._accounts[account_index]
+        try:
+            session_lease = await account.sessions.acquire_session(model, messages)
+        except Exception:
+            await self.release(account_index)
+            raise
+        # update stats
+        self._account_stats[account_index]["use_count"] += 1
+        self._account_stats[account_index]["last_used_at"] = time.time()
+        self._account_stats[account_index]["last_model"] = model
+        self._account_stats[account_index]["busy"] = True
+        self._last_reserved_index = account_index
+        logger.info(
+            "account pool reserved account_index=%s/%s model=%s use_count=%s",
+            account_index,
+            len(self._accounts),
+            model,
+            self._account_stats[account_index]["use_count"],
+        )
+        await self._write_stats()
+        return CodebuffAccountLease(
+            client=account.client,
+            session=session_lease.session,
+            _session_lease=session_lease,
+            _pool=self,
+            _account_index=account_index,
+        )
+
+    async def release(self, account_index: int) -> None:
+        async with self._condition:
+            self._accounts[account_index].busy = False
+            self._account_stats[account_index]["busy"] = False
+            self._condition.notify(1)
+        logger.info("account pool released account_index=%s", account_index)
+        await self._write_stats()
+
+    def mark_rate_limited(
+        self,
+        account_index: int,
+        model: str,
+        reset_at: str | None,
+    ) -> None:
+        if not reset_at:
+            blocked_until = time.time() + 3600
+        else:
+            try:
+                dt = datetime.fromisoformat(reset_at.replace("Z", "+00:00"))
+                blocked_until = dt.timestamp()
+            except Exception:
+                blocked_until = time.time() + 3600
+        self._accounts[account_index].rate_limit.blocked_models[model] = blocked_until
+        self._accounts[account_index].rate_limit.last_error_at = time.time()
+        logger.warning(
+            "account %s rate limited for model=%s until %s",
+            account_index,
+            model,
+            reset_at,
+        )
+
+    async def _reserve_account(self, model: str) -> int:
+        async with self._condition:
+            while True:
+                account_index = self._next_available_index(model)
+                if account_index is not None:
+                    self._accounts[account_index].busy = True
+                    self._next_index = (account_index + 1) % len(self._accounts)
+                    return account_index
+                await self._condition.wait()
+
+    def _next_available_index(self, model: str) -> int | None:
+        account_count = len(self._accounts)
+        now = time.time()
+        for offset in range(account_count):
+            account_index = (self._next_index + offset) % account_count
+            account = self._accounts[account_index]
+            if account.busy:
+                continue
+            blocked_until = account.rate_limit.blocked_models.get(model)
+            if blocked_until and now < blocked_until:
+                continue
+            return account_index
+        return None
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace(
+        "+00:00",
+        "Z",
+    )
+
+
+def _host_header(url: str) -> str:
+    parsed = urlparse(url)
+    return parsed.netloc or "www.codebuff.com"
+
+
+def _queue_poll_delay(estimated_wait_ms: Any) -> float:
+    if isinstance(estimated_wait_ms, int | float) and estimated_wait_ms > 0:
+        return min(max(float(estimated_wait_ms) / 1000.0, 0.25), 2.0)
+    return 0.25
+
+
+def _network_error(method: str, url: str, error: httpx.RequestError) -> CodebuffError:
+    detail = str(error).strip()
+    suffix = f": {detail}" if detail else ""
+    return CodebuffError(
+        f"Codebuff request failed: {method} {url} network error "
+        f"({type(error).__name__}){suffix}",
+        502,
+    )
+
+
+def _upstream_error(
+    response: httpx.Response,
+    *,
+    body: bytes | None = None,
+    prefix: str = "Codebuff request failed",
+) -> CodebuffError:
+    raw_text = (
+        body.decode("utf-8", errors="replace")
+        if body is not None
+        else response.text
+    )
+    text = raw_text[:500]
+    if response.status_code == 409:
+        try:
+            data = (
+                response.json()
+                if body is None
+                else httpx.Response(
+                    response.status_code,
+                    content=body,
+                    headers=response.headers,
+                ).json()
+            )
+        except ValueError:
+            data = {}
+        if data.get("error") == "session_model_mismatch":
+            upstream_message = data.get("message") or text
+            return CodebuffError(
+                "Codebuff 409 session_model_mismatch: "
+                f"{upstream_message} 当前 IP/区域受限；请换用 US 服务器或 US 出口 IP 后重试。",
+                409,
+                is_session_error=True,
+            )
+        if data.get("error") == "session_superseded":
+            return CodebuffError(
+                f"Codebuff 409 session_superseded: {data.get('message') or text}",
+                409,
+                is_session_error=True,
+            )
+
+    # BUG A FIX: Codebuff returns 428 when the token has no active session and
+    # the client must first walk the waiting_room flow (request_ad_chain +
+    # get_streak). Without this branch the request is collapsed to a generic
+    # 502 wrapper and Hermes reports "Provider authentication failed" — even
+    # though the proxy + credentials are fine. Marking it as a session error
+    # makes chat_completions invalidate the local cache and retry, which on
+    # the next attempt follows the standard _request_ads_and_streak path
+    # before re-creating the session.
+    if response.status_code == 428:
+        try:
+            data = (
+                response.json()
+                if body is None
+                else httpx.Response(
+                    response.status_code,
+                    content=body,
+                    headers=response.headers,
+                ).json()
+            )
+        except ValueError:
+            data = {}
+        if data.get("error") == "waiting_room_required":
+            return CodebuffError(
+                f"Codebuff 428 waiting_room_required: {data.get('message') or text}",
+                428,
+                is_session_error=True,
+            )
+
+    if response.status_code == 410:
+        try:
+            data = (
+                response.json()
+                if body is None
+                else httpx.Response(
+                    response.status_code,
+                    content=body,
+                    headers=response.headers,
+                ).json()
+            )
+        except ValueError:
+            data = {}
+        if data.get("error") == "session_expired":
+            return CodebuffError(
+                f"Codebuff 410 session_expired: {data.get('message') or text}",
+                410,
+                is_session_error=True,
+            )
+
+    if response.status_code == 429:
+        try:
+            data = (
+                response.json()
+                if body is None
+                else httpx.Response(
+                    response.status_code,
+                    content=body,
+                    headers=response.headers,
+                ).json()
+            )
+        except ValueError:
+            data = {}
+        return CodebuffError(
+            f"{prefix}: {response.status_code} {text}",
+            502,
+            is_rate_limit=True,
+            reset_at=data.get("resetAt"),
+            retry_after_ms=data.get("retryAfterMs"),
+        )
+
+    return CodebuffError(
+        f"{prefix}: {response.status_code} {text}",
+        502,
+    )
+
+
+def _ad_messages(messages: list[dict[str, Any]] | None) -> list[dict[str, str]]:
+    return [
+        {
+            "role": _ad_message_role(message.get("role")),
+            "content": _ad_message_content(message.get("content")),
+        }
+        for message in messages or []
+    ]
+
+
+def _ad_message_role(role: Any) -> str:
+    if role == "developer":
+        return "system"
+    return str(role or "user")
+
+
+def _ad_message_content(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if content is None:
+        return ""
+    if isinstance(content, list):
+        parts = [
+            str(part.get("text"))
+            for part in content
+            if isinstance(part, dict) and isinstance(part.get("text"), str)
+        ]
+        return "\n".join(parts)
+    if isinstance(content, dict) and isinstance(content.get("text"), str):
+        return content["text"]
+    return str(content)
