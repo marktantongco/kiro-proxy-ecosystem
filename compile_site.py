@@ -40,7 +40,7 @@ files_to_compile = [
     {
         "path": "installers/install_owl_agent.sh",
         "category": "Installer",
-        "relation": "Centrally provisions OWL workspaces for local Obsidian vaults, notes searches, and semantic models. Deduplicated core OWL and credentials installer."
+        "relation": "Unified OWL-Agent installer v5.0 — fully self-contained. Consolidates the fragmented v3.3/v4.2/v4.5 installers: core v4.5 engine (embedded base64 payloads), run.sh launcher, auto-generated systemd service, port-guardian timer, 7-format agent registry, kiro-cli native download, MCP registration, and an HTTP-over-DNS TXT tunnel channel."
     },
     {
         "path": "mcp/owl_resilient_mcp.py",

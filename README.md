@@ -62,7 +62,7 @@ This replication suite is organized logically into specific functional directori
 * **[`kiro_gateway_wrapper.sh`](./scripts/kiro_gateway_wrapper.sh)**: Standard Kiro terminal launcher.
 
 ### 🛠️ Dedicated Installers (`/installers`)
-* **[`install_owl_agent.sh`](./installers/install_owl_agent.sh)**: *Deduplicated Core Installer.* Custom-built to download `kiro-cli` native binaries from `prod.download.cli.kiro.dev` via manifest-based version resolution, repair dynamic linkers (`ld-linux`), initialize credentials pools, and provision the OWL proxy defense stack at `~/.owl-agent` with robust retry pipelines.
+* **[`install_owl_agent.sh`](./installers/install_owl_agent.sh)**: *Unified OWL-Agent Installer v5.0 — fully self-contained.* Consolidates the fragmented v3.3 / v4.2 / v4.5 / Kiro installers into one canonical script with `install` / `update` / `uninstall` / `doctor` / `status` subcommands. Installs the core v4.5 engine (`owl_server.py`, `proxy_defense.py`, `ml_models.py`, `plugin_loader.py`, `mcp-server.py` embedded as base64 payloads), a `run.sh` launcher, auto-generated systemd service, port-guardian timer, 7-format agent registry (SKILL.md, buff.yaml, jcode-skill.json, kiro-skill.toml, antigravity.json, opencode-skill.yaml, agent-manifest.json), `kiro-cli` native binary download with arch/glibc auto-detect (manifest-based resolution from `prod.download.cli.kiro.dev`), MCP config registration (auto-merged into `~/.kiro/settings/mcp.json`), and a self-contained HTTP-over-DNS TXT tunnel channel.
 * **[`install_kiro_owl_agent.sh`](./installers/install_kiro_owl_agent.sh)**: Dedicated installer script for cloning and provisioning the `kiro-gateway` python service, setting up its virtual environment, and configuring parameters in `opencode.jsonc`. Uses the same manifest-based download as `install_owl_agent.sh`.
 
 ### 🧠 MCP Integration (`/mcp`)
@@ -138,6 +138,14 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 ---
 
 ## 🛠️ 5. Recent Ecosystem Updates & Schema Patching
+
+### August 6, 2026: Unified OWL-Agent Installer v5.0
+* **One Installer to Rule Them All**: Replaced the fragmented v3.3 / v4.2 / v4.5 / Kiro-gateway installer sprawl with a single self-contained `install_owl_agent.sh` (v5.0) that embeds the full core engine — `owl_server.py`, `proxy_defense.py`, `ml_models.py`, `plugin_loader.py`, and `mcp-server.py` — as base64 payloads (checksum-verified byte-identical to the live source). Fresh machines now need exactly one script, no cloning required.
+* **Lifecycle Subcommands**: Added `install` / `update` / `uninstall` / `doctor` / `status` commands with `--api-port`, `--no-service`, `--skip-*` flags; stable API key across reinstalls; safe `uninstall` (path-guarded `rm -rf`, MCP entry removal).
+* **Systemd Service + Port Guardian**: Auto-generates `owl-agent.service` (ports, countries, random API key) and a `port-guardian` timer that defends the chosen API port — guarded port injected from `--api-port`.
+* **7-Format Agent Registry**: Writes SKILL.md, buff.yaml, jcode-skill.json, kiro-skill.toml, antigravity.json, opencode-skill.yaml, and agent-manifest.json so every agent runtime can discover OWL out of the box.
+* **kiro-cli + MCP Wiring**: Downloads the native `kiro-cli` binary (arch/glibc auto-detect against `prod.download.cli.kiro.dev/stable/latest/manifest.json`), seeds a blank DB, adds an :60000-routed wrapper, and templates the MCP server config merged into `~/.kiro/settings/mcp.json`.
+* **DNS Synergy Channel**: Added a self-contained HTTP-over-DNS TXT tunnel (client + server) for captive-portal / UDP-53 escape paths — verified end-to-end (fetched `https://example.com` → HTTP 200 through the tunnel).
 
 ### May 30, 2026: OpenCode Stack Recovery & Schema Alignment
 * **The Launch Issue**: The `opencode` environment tmux session was crashing immediately with exit code `[exited]` upon launching. Raw binary checks revealed a configuration schema failure: `[cause]: SchemaError: Missing key at ["command"]["heavy"]["template"]` and `["command"]["light"]["template"]`.
