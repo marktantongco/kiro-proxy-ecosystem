@@ -132,7 +132,8 @@ if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
   # Run the REAL launcher module AND the real npm registry latest, then apply
   # the launcher's own version comparison (parseVersion + compareVersions):
   # checkForUpdates fires when currentVersion===null || compareVersions(cur, latest) < 0.
-  # We assert the decision is false — a lower-than-latest pin must FAIL this check.
+  # We EXPLICITLY assert compareVersions(cur, latest) > 0 — the pinned version must
+  # be strictly newer than the published latest, so the update/kill path can never fire.
   out=$(timeout 15 node -e '
     const { createLauncher } = require(process.argv[1])
     const https = require("https")
@@ -162,21 +163,22 @@ if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
       return 0
     }
     const latest = process.argv[2]
-    const decision = cur === null || cmp(cur, latest) < 0
+    const c = (cur === null || latest === "") ? -99 : cmp(cur, latest)
     console.log("CURRENT=" + (cur === null ? "null" : cur))
     console.log("BINARY=" + (require("fs").existsSync(t.CONFIG.binaryPath) ? "yes" : "no"))
     console.log("LATEST=" + latest)
-    console.log("UPDATE=" + (decision ? "true" : "false"))
+    console.log("CMP=" + c)
+    console.log("UPDATE=" + (c < 0 ? "true" : "false"))
   ' "$LAUNCHER" "${FB2API_NPM_LATEST:-$(curl -s --max-time 15 https://registry.npmjs.org/freebuff/latest 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).version||"")}catch(e){console.log("")}})' )}" 2>&1)
   rc=$?
   cur=$(echo "$out" | sed -n 's/^CURRENT=//p')
   bin=$(echo "$out" | sed -n 's/^BINARY=//p')
   lat=$(echo "$out" | sed -n 's/^LATEST=//p')
-  upd=$(echo "$out" | sed -n 's/^UPDATE=//p')
-  if [ "$rc" -eq 0 ] && [ -n "$cur" ] && [ "$cur" != "null" ] && [ -n "$lat" ] && [ "$upd" = "false" ]; then
-    ok "getCurrentVersion()=$cur vs npm latest=$lat (binary=$bin) -> update triggered: false"
+  cmpr=$(echo "$out" | sed -n 's/^CMP=//p')
+  if [ "$rc" -eq 0 ] && [ -n "$cur" ] && [ "$cur" != "null" ] && [ -n "$lat" ] && [ -n "$cmpr" ] && [ "$cmpr" -gt 0 ] 2>/dev/null; then
+    ok "compareVersions(cur=$cur, latest=$lat)=$cmpr > 0 (binary=$bin) -> update triggered: false"
   else
-    bad "autoupdate NOT blocked (cur=${cur:-err} latest=${lat:-?} bin=${bin:-?} update=${upd:-?}) — re-pin metadata or registry unreachable"
+    bad "autoupdate NOT blocked (cur=${cur:-err} latest=${lat:-?} cmp=${cmpr:-?} bin=${bin:-?}) — re-pin metadata or registry unreachable"
   fi
 else
   bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
