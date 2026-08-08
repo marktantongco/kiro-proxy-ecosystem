@@ -111,6 +111,12 @@ else
 fi
 if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active "$GUARD_SVC" >/dev/null 2>&1; then
   ok "$GUARD_SVC active"
+  GPID=$(systemctl --user show "$GUARD_SVC" -p MainPID --value 2>/dev/null)
+  if [ -n "${GPID:-}" ] && [ "$GPID" != "0" ] && kill -0 "$GPID" 2>/dev/null; then
+    ok "$GUARD_SVC process alive (pid $GPID)"
+  else
+    bad "$GUARD_SVC active but process dead (pid=${GPID:-unknown}) — guard not actually running"
+  fi
 else
   bad "$GUARD_SVC not active — takeover guard down"
 fi
@@ -120,29 +126,57 @@ else
   bad "metadata not pinned — launcher may kill session for update"
 fi
 
-say "== 12. launcher autoupdate decision (real getCurrentVersion) =="
+say "== 12. launcher autoupdate decision (real getCurrentVersion + npm latest) =="
 LAUNCHER="${FB2API_LAUNCHER:-/usr/local/lib/node_modules/freebuff/launcher.js}"
 if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
-  # Run the REAL launcher module: getCurrentVersion() must be non-null and
-  # >= the npm latest so checkForUpdates (currentVersion===null || cmp<0)
-  # evaluates to false — i.e. the update/kill path can never fire.
-  out=$(node -e '
+  # Run the REAL launcher module AND the real npm registry latest, then apply
+  # the launcher's own version comparison (parseVersion + compareVersions):
+  # checkForUpdates fires when currentVersion===null || compareVersions(cur, latest) < 0.
+  # We assert the decision is false — a lower-than-latest pin must FAIL this check.
+  out=$(timeout 15 node -e '
     const { createLauncher } = require(process.argv[1])
+    const https = require("https")
     const l = createLauncher({ packageName: "freebuff", displayName: "Freebuff", includeTreeSitterWasm: true })
     const t = l.__testing
     const cur = t.getCurrentVersion()
+    // parseVersion + compareVersions re-implemented exactly as in launcher.js
+    const parse = (v) => {
+      if (typeof v !== "string") return null
+      const m = v.match(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/)
+      if (!m) return null
+      const pre = m[4]?.split(".") ?? []
+      if (pre.some((p) => /^0\d+$/.test(p))) return null
+      return { main: m.slice(1, 4).map(BigInt), pre }
+    }
+    const cmp = (a, b) => {
+      const pa = parse(a); const pb = parse(b)
+      if (!pa) return -1; if (!pb) return 1
+      for (let i = 0; i < 3; i++) { if (pa.main[i] < pb.main[i]) return -1; if (pa.main[i] > pb.main[i]) return 1 }
+      if (pa.pre.length === 0) return pb.pre.length === 0 ? 0 : 1
+      if (pb.pre.length === 0) return -1
+      for (let i = 0; i < Math.max(pa.pre.length, pb.pre.length); i++) {
+        const x = pa.pre[i] || ""; const y = pb.pre[i] || ""
+        if (/^\d+$/.test(x) && /^\d+$/.test(y)) { const n = BigInt(x) - BigInt(y); if (n) return n > 0 ? 1 : -1 }
+        else { if (x > y) return 1; if (x < y) return -1 }
+      }
+      return 0
+    }
+    const latest = process.argv[2]
+    const decision = cur === null || cmp(cur, latest) < 0
     console.log("CURRENT=" + (cur === null ? "null" : cur))
     console.log("BINARY=" + (require("fs").existsSync(t.CONFIG.binaryPath) ? "yes" : "no"))
-    console.log("UPDATE=" + (cur === null ? "true" : "false"))
-  ' "$LAUNCHER" 2>&1)
+    console.log("LATEST=" + latest)
+    console.log("UPDATE=" + (decision ? "true" : "false"))
+  ' "$LAUNCHER" "${FB2API_NPM_LATEST:-$(curl -s --max-time 15 https://registry.npmjs.org/freebuff/latest 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).version||"")}catch(e){console.log("")}})' )}" 2>&1)
   rc=$?
   cur=$(echo "$out" | sed -n 's/^CURRENT=//p')
   bin=$(echo "$out" | sed -n 's/^BINARY=//p')
+  lat=$(echo "$out" | sed -n 's/^LATEST=//p')
   upd=$(echo "$out" | sed -n 's/^UPDATE=//p')
-  if [ "$rc" -eq 0 ] && [ -n "$cur" ] && [ "$cur" != "null" ] && [ "$upd" = "false" ]; then
-    ok "getCurrentVersion()=$cur (non-null), binary=$bin -> update triggered: false"
+  if [ "$rc" -eq 0 ] && [ -n "$cur" ] && [ "$cur" != "null" ] && [ -n "$lat" ] && [ "$upd" = "false" ]; then
+    ok "getCurrentVersion()=$cur vs npm latest=$lat (binary=$bin) -> update triggered: false"
   else
-    bad "autoupdate NOT blocked (cur=${cur:-err} bin=${bin:-?} update=${upd:-?}) — re-pin metadata"
+    bad "autoupdate NOT blocked (cur=${cur:-err} latest=${lat:-?} bin=${bin:-?} update=${upd:-?}) — re-pin metadata or registry unreachable"
   fi
 else
   bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
