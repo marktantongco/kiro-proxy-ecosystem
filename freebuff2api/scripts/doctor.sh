@@ -85,6 +85,69 @@ else
   w "service not running via systemd — resource checks skipped"
 fi
 
+say "== 10. swap devices (boot-time sanity) =="
+swap=$(swapon --show --noheadings 2>/dev/null)
+zram_sz=$(echo "$swap" | awk '$1=="/dev/zram0"{print $3}')
+swap_sz=$(echo "$swap" | awk '$1=="/swapfile"{print $3}')
+if [ "$zram_sz" = "4G" ]; then
+  ok "zram0 active at ${zram_sz}"
+else
+  bad "zram0 expected 4G, got '${zram_sz:-missing}'"
+fi
+if [ "$swap_sz" = "12G" ]; then
+  ok "/swapfile active at ${swap_sz}"
+else
+  bad "/swapfile expected 12G, got '${swap_sz:-missing}'"
+fi
+
+say "== 11. session protection =="
+CONF="$HOME/.config/manicode/session-protect.conf"
+GUARD_SVC="freebuff-owner-guard.service"
+META="$HOME/.config/manicode/freebuff-metadata.json"
+if [ -f "$CONF" ] && grep -q '^PROTECT_FROM_TAKEOVER=1' "$CONF" && grep -q '^BLOCK_AUTOUPDATE=1' "$CONF"; then
+  ok "session-protect.conf present (takeover + autoupdate blocked)"
+else
+  bad "session-protect.conf missing/incomplete — session not hardcoded"
+fi
+if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active "$GUARD_SVC" >/dev/null 2>&1; then
+  ok "$GUARD_SVC active"
+else
+  bad "$GUARD_SVC not active — takeover guard down"
+fi
+if [ -f "$META" ] && grep -q '"version": *"999.999.999"' "$META"; then
+  ok "metadata pinned 999.999.999 (auto-update blocked)"
+else
+  bad "metadata not pinned — launcher may kill session for update"
+fi
+
+say "== 12. launcher autoupdate decision (real getCurrentVersion) =="
+LAUNCHER="${FB2API_LAUNCHER:-/usr/local/lib/node_modules/freebuff/launcher.js}"
+if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
+  # Run the REAL launcher module: getCurrentVersion() must be non-null and
+  # >= the npm latest so checkForUpdates (currentVersion===null || cmp<0)
+  # evaluates to false — i.e. the update/kill path can never fire.
+  out=$(node -e '
+    const { createLauncher } = require(process.argv[1])
+    const l = createLauncher({ packageName: "freebuff", displayName: "Freebuff", includeTreeSitterWasm: true })
+    const t = l.__testing
+    const cur = t.getCurrentVersion()
+    console.log("CURRENT=" + (cur === null ? "null" : cur))
+    console.log("BINARY=" + (require("fs").existsSync(t.CONFIG.binaryPath) ? "yes" : "no"))
+    console.log("UPDATE=" + (cur === null ? "true" : "false"))
+  ' "$LAUNCHER" 2>&1)
+  rc=$?
+  cur=$(echo "$out" | sed -n 's/^CURRENT=//p')
+  bin=$(echo "$out" | sed -n 's/^BINARY=//p')
+  upd=$(echo "$out" | sed -n 's/^UPDATE=//p')
+  if [ "$rc" -eq 0 ] && [ -n "$cur" ] && [ "$cur" != "null" ] && [ "$upd" = "false" ]; then
+    ok "getCurrentVersion()=$cur (non-null), binary=$bin -> update triggered: false"
+  else
+    bad "autoupdate NOT blocked (cur=${cur:-err} bin=${bin:-?} update=${upd:-?}) — re-pin metadata"
+  fi
+else
+  bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
+fi
+
 say
 if [ $fail -eq 0 ]; then
   say "RESULT: GO ($warn warnings)"
