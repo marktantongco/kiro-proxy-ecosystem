@@ -8,7 +8,24 @@
 #   • version pin     freebuff-metadata.json (must be 999.999.999 to block auto-update)
 #   • last RESTORED   recent ownership-restore events from the guard log
 #
+# Usage:
+#   session-protect             status of all protection layers (exit 0 = all active)
+#   session-protect --doctor    full 3-layer stack check in one invocation:
+#                                 1. this status output (all layers)
+#                                 2. doctor.sh sections 11 (static) + 12 (launcher)
+#                                 3. raw launcher getCurrentVersion() decision
+#                               Exit 0 = GO, 1 = any layer failed, 2 = doctor.sh not found
+#
 # Exit code: 0 if every protection layer is active, 1 otherwise.
+
+DOCTOR="${FB2API_DOCTOR:-/home/ubuntu/ai-workspace/kiro-proxy-ecosystem/freebuff2api/scripts/doctor.sh}"
+DOCTOR_MODE=0
+case "${1:-}" in
+  --doctor|-d) DOCTOR_MODE=1 ;;
+  --help|-h)   sed -n '2,20p' "$0"; exit 0 ;;
+  "")         : ;;
+  *)           echo "usage: session-protect [--doctor]" >&2; exit 2 ;;
+esac
 
 CONF="$HOME/.config/manicode/session-protect.conf"
 OWNER_FILE="$HOME/.config/manicode/freebuff-instance-owner.json"
@@ -124,9 +141,70 @@ else
   warn "no guard log yet (guard never ran or log rotated)"
 fi
 
+# ── 6. Launcher autoupdate decision (raw, real module) ────────────────────
+hdr "launcher  $DIM(/usr/local/lib/node_modules/freebuff/launcher.js)$RESET"
+LAUNCHER="/usr/local/lib/node_modules/freebuff/launcher.js"
+if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
+  lout=$(node -e '
+    const { createLauncher } = require(process.argv[1])
+    const l = createLauncher({ packageName: "freebuff", displayName: "Freebuff", includeTreeSitterWasm: true })
+    const t = l.__testing
+    const cur = t.getCurrentVersion()
+    console.log("CURRENT=" + (cur === null ? "null" : cur))
+    console.log("BINARY=" + (require("fs").existsSync(t.CONFIG.binaryPath) ? "yes" : "no"))
+    console.log("ALLOWED=" + t.isTargetAllowedForThisMachine(t.getDefaultTargetKey()))
+  ' "$LAUNCHER" 2>&1)
+  lrc=$?
+  lcur=$(echo "$lout" | sed -n 's/^CURRENT=//p')
+  lbin=$(echo "$lout" | sed -n 's/^BINARY=//p')
+  lall=$(echo "$lout" | sed -n 's/^ALLOWED=//p')
+  if [ "$lrc" -eq 0 ] && [ -n "$lcur" ] && [ "$lcur" != "null" ] && [ "$lbin" = "yes" ]; then
+    ok "getCurrentVersion()=$lcur (non-null), binary=$lbin, target allowed=$lall -> update triggered: false"
+  else
+    bad "autoupdate NOT blocked (cur=${lcur:-err} bin=${lbin:-?} allowed=${lall:-?}) — re-pin metadata"
+    status=1
+  fi
+else
+  bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
+  status=1
+fi
+
+# ── 7. doctor.sh sections 11 + 12 (end-to-end validation) ─────────────────
+if [ "$DOCTOR_MODE" = 1 ]; then
+  hdr "doctor  $DIM(sections 11+12 of $DOCTOR)$RESET"
+  if [ -f "$DOCTOR" ] && bash -n "$DOCTOR" 2>/dev/null; then
+    # Chat checks (4/5) need the API key; grab it from the deployed .env if present.
+    DKEY="${FB2API_API_KEY:-}"
+    if [ -z "$DKEY" ] && [ -r /var/lib/freebuff2api/repo/.env ]; then
+      DKEY=$(grep '^FREEBUFF_API_KEY=' /var/lib/freebuff2api/repo/.env 2>/dev/null | cut -d= -f2)
+    fi
+    DOUT_TMP=$(mktemp)
+    FB2API_API_KEY="$DKEY" timeout 120 bash "$DOCTOR" >"$DOUT_TMP" 2>&1
+    DRC=$?
+    DRESULT=$(grep -E 'RESULT: (GO|NO-GO)' "$DOUT_TMP" | head -1)
+    sed -n '/^== 11\./,/^RESULT/p' "$DOUT_TMP" | head -16 | sed 's/^/  /'
+    rm -f "$DOUT_TMP"
+    # Verdict comes from the doctor's OWN exit code (0=GO, 1=NO-GO) — not a
+    # section-scoped FAIL count, which would miss failures in earlier sections.
+    if [ "$DRC" -eq 0 ]; then
+      ok "doctor: GO (exit 0)"
+    else
+      bad "doctor: ${DRESULT:-no RESULT} (exit $DRC) — see $DOCTOR"
+      status=1
+    fi
+  else
+    bad "doctor.sh not found/invalid ($DOCTOR) — set FB2API_DOCTOR"
+    status=1
+  fi
+fi
+
 say
 if [ "$status" -eq 0 ]; then
-  printf '%sSESSION-PROTECT: ALL LAYERS ACTIVE%s\n' "$GREEN" "$RESET"
+  if [ "$DOCTOR_MODE" = 1 ]; then
+    printf '%sSESSION-PROTECT --DOCTOR: ALL LAYERS ACTIVE (GO)%s\n' "$GREEN" "$RESET"
+  else
+    printf '%sSESSION-PROTECT: ALL LAYERS ACTIVE%s\n' "$GREEN" "$RESET"
+  fi
 else
   printf '%sSESSION-PROTECT: DEGRADED (%s issue%s)%s\n' "$RED" "$status" "$([ "$status" = 1 ] && echo '' || echo 's')" "$RESET"
 fi
