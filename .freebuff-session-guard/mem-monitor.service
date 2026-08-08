@@ -1,0 +1,6 @@
+[Unit]
+Description=Sample Freebuff TUI memory to log
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mem-monitor --log
