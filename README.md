@@ -65,6 +65,12 @@ This replication suite is organized logically into specific functional directori
 * **[`install_owl_agent.sh`](./installers/install_owl_agent.sh)**: *Unified OWL-Agent Installer v5.0 — fully self-contained.* Consolidates the fragmented v3.3 / v4.2 / v4.5 / Kiro installers into one canonical script with `install` / `update` / `uninstall` / `doctor` / `status` subcommands. Installs the core v4.5 engine (`owl_server.py`, `proxy_defense.py`, `ml_models.py`, `plugin_loader.py`, `mcp-server.py` embedded as base64 payloads), a `run.sh` launcher, auto-generated systemd service, port-guardian timer, 7-format agent registry (SKILL.md, buff.yaml, jcode-skill.json, kiro-skill.toml, antigravity.json, opencode-skill.yaml, agent-manifest.json), `kiro-cli` native binary download with arch/glibc auto-detect (manifest-based resolution from `prod.download.cli.kiro.dev`), MCP config registration (auto-merged into `~/.kiro/settings/mcp.json`), and a self-contained HTTP-over-DNS TXT tunnel channel.
 * **[`install_kiro_owl_agent.sh`](./installers/install_kiro_owl_agent.sh)**: Dedicated installer script for cloning and provisioning the `kiro-gateway` python service, setting up its virtual environment, and configuring parameters in `opencode.jsonc`. Uses the same manifest-based download as `install_owl_agent.sh`.
 
+### 🛡️ Session Protection (`.freebuff-session-guard`)
+* **[`freebuff-owner-guard.sh`](./.freebuff-session-guard/freebuff-owner-guard.sh)**: Takeover guard — watches the Freebuff instance-owner file and restores ownership to the protected session within ~3s of any foreign write. Runs continuously via a systemd **user** unit (`freebuff-owner-guard.service`, requires `loginctl enable-linger`).
+* **[`session-protect`](./.freebuff-session-guard/session-protect)**: Status/verification command. `session-protect` shows all protection layers; `session-protect --doctor` runs the full 3-layer stack check (status + real launcher `getCurrentVersion()` decision + doctor.sh sections 11/12) in one invocation. Exit 0 = GO.
+* **[`freebuff-owner-guard.service`](./.freebuff-session-guard/freebuff-owner-guard.service)**: systemd user unit template (`Restart=always`) for the guard.
+* **[`zram-swap-setup.sh`](./.freebuff-session-guard/zram-swap-setup.sh)**: Boot-time zram setup that preserves writeback (raw sysfs sequence `comp_algorithm → backing_dev → disksize`).
+
 ### 🧠 MCP Integration (`/mcp`)
 * **[`owl_resilient_mcp.py`](./mcp/owl_resilient_mcp.py)**: The premium Model Context Protocol (MCP) server bridge. Translates OpenCode semantic searches and indexes local Obsidian vaults directly through our proxy stack.
 
@@ -77,6 +83,41 @@ This replication suite is organized logically into specific functional directori
 * **[`README_PROXY_ARCHITECTURE.md`](./configs/README_PROXY_ARCHITECTURE.md)**: Comprehensive proxy bypass routing architecture manual for NVIDIA NIM and OpenCode Zen model providers.
 * **[`kiro-gateway.service`](./systemd/kiro-gateway.service)**: Systemd user-service unit mapping for running Kiro background API translators.
 * **[`owl-forward-proxy.service`](./systemd/owl-forward-proxy.service)**: Systemd user-service unit mapping for running OWL forward proxies.
+
+---
+
+## 🛡️ 2.5 Freebuff Session Protection & the Metadata Pin-Survival Guarantee
+
+### What it protects
+A running Freebuff session can be taken over or killed by (a) another Freebuff instance claiming the owner file, or (b) the launcher's auto-update path (`checkForUpdates`) killing the process to install a new version. The guard blocks both:
+
+| Threat | Defense | Artifact |
+|---|---|---|
+| Takeover | Owner-file guard restores ownership within ~3s | `freebuff-owner-guard.sh` + systemd user unit |
+| Auto-update kill | Version pin makes `checkForUpdates` never fire | `~/.config/manicode/freebuff-metadata.json` pinned to `999.999.999` |
+| Everything silently regressing | 3-layer doctor check | `session-protect --doctor` (exit 0 = GO) |
+
+### The pin-survival guarantee (reinstall & upgrade safe)
+The metadata pin lives at `~/.config/manicode/freebuff-metadata.json` — **outside npm's jurisdiction** (`/usr/local/lib/node_modules/freebuff/`). Reinstalling or upgrading the `freebuff` npm package **cannot touch it**, because:
+
+1. **npm only manages `node_modules/`** — the pin file is in the user config dir, which npm never writes.
+2. **The package has no install-time scripts** — `package.json` declares only `prepack`/`postpack` (publish-time). A bare `npm install -g freebuff` runs zero code that could rewrite metadata.
+3. **The launcher resolves `metadataPath` at runtime from the user's home** — a new launcher version reads the *same* pin file.
+
+**Proven by a real install**: an isolated `npm install --global freebuff@0.0.142` with a pinned metadata file left the pin **byte-identical** (sha256 unchanged) and the newly-installed launcher still reported `getCurrentVersion()=999.999.999` → `update triggered: false`.
+
+### Caveats (what the pin does *not* protect against)
+* **A future launcher rewrite** that stops reading `freebuff-metadata.json` or ignores the version pin entirely — a code-level change no pin file can defend against.
+* **Manual deletion** of `~/.config/manicode/` itself.
+* These are deliberate changes to the protection mechanism, not reinstall/upgrade scenarios.
+
+### Verifying the protection
+```bash
+session-protect                    # status of all layers (exit 0 = all active)
+session-protect --doctor           # full 3-layer stack check (status + launcher + doctor 11/12)
+FB2API_API_KEY=<key> bash freebuff2api/scripts/doctor.sh   # full 12-section gateway doctor
+```
+`doctor.sh` section 11 checks the static pin + guard liveness; section 12 fetches the **real npm latest** and asserts `compareVersions(getCurrentVersion(), latest) > 0` explicitly — so a lower-than-latest or equal-to-latest pin fails loudly.
 
 ---
 
@@ -138,6 +179,13 @@ If your model calls return **403 Forbidden** or **502 Bad Gateway** errors, your
 ---
 
 ## 🛠️ 5. Recent Ecosystem Updates & Schema Patching
+
+### August 9, 2026: Freebuff Session Protection Suite
+* **Takeover Guard**: `freebuff-owner-guard.sh` + systemd user unit restore session ownership within ~3s of any foreign write (verified against live-pid and dead-pid spoofs).
+* **Auto-Update Block**: `freebuff-metadata.json` pinned to `999.999.999` so the launcher's `checkForUpdates` can never fire — verified end-to-end against the real launcher module and the real npm registry.
+* **3-Layer Doctor**: `session-protect --doctor` runs status + real launcher decision + doctor.sh sections 11/12 in one command (exit 0 = GO).
+* **Doctor Hardening**: Section 12 now fetches the real npm `latest` and asserts `compareVersions(cur, latest) > 0` explicitly (low-pin and equal-pin simulations fail); section 11 checks the guard process is alive, not just the service active.
+* **Pin-Survival Proven**: A real `npm install -g freebuff@0.0.142` in an isolated environment left the pin byte-identical — reinstalls/upgrades cannot touch `~/.config/manicode/freebuff-metadata.json`.
 
 ### August 6, 2026: Unified OWL-Agent Installer v5.0
 * **One Installer to Rule Them All**: Replaced the fragmented v3.3 / v4.2 / v4.5 / Kiro-gateway installer sprawl with a single self-contained `install_owl_agent.sh` (v5.0) that embeds the full core engine — `owl_server.py`, `proxy_defense.py`, `ml_models.py`, `plugin_loader.py`, and `mcp-server.py` — as base64 payloads (checksum-verified byte-identical to the live source). Fresh machines now need exactly one script, no cloning required.
