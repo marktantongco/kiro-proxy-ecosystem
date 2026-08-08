@@ -1,0 +1,13 @@
+[Unit]
+Description=Freebuff session ownership guard (anti-takeover)
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/freebuff-owner-guard.sh
+Restart=always
+RestartSec=10
+# Bound to the user session; requires linger for headless operation.
+
+[Install]
+WantedBy=default.target
