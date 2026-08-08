@@ -11,10 +11,10 @@
 # Usage:
 #   session-protect             status of all protection layers (exit 0 = all active)
 #   session-protect --doctor    full 3-layer stack check in one invocation:
-#                                 1. this status output (all layers)
-#                                 2. doctor.sh sections 11 (static) + 12 (launcher)
-#                                 3. raw launcher getCurrentVersion() decision
-#                               Exit 0 = GO, 1 = any layer failed, 2 = doctor.sh not found
+#                                 1. status output (config/guard/owner/pin/log)
+#                                 2. raw launcher getCurrentVersion() decision
+#                                 3. doctor.sh sections 11 (static) + 12 (dynamic)
+#                               Exit 0 = GO, 1 = any layer failed, 2 = usage error
 #
 # Exit code: 0 if every protection layer is active, 1 otherwise.
 
@@ -142,31 +142,36 @@ else
 fi
 
 # ── 6. Launcher autoupdate decision (raw, real module) ────────────────────
-hdr "launcher  $DIM(/usr/local/lib/node_modules/freebuff/launcher.js)$RESET"
-LAUNCHER="/usr/local/lib/node_modules/freebuff/launcher.js"
-if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
-  lout=$(node -e '
-    const { createLauncher } = require(process.argv[1])
-    const l = createLauncher({ packageName: "freebuff", displayName: "Freebuff", includeTreeSitterWasm: true })
-    const t = l.__testing
-    const cur = t.getCurrentVersion()
-    console.log("CURRENT=" + (cur === null ? "null" : cur))
-    console.log("BINARY=" + (require("fs").existsSync(t.CONFIG.binaryPath) ? "yes" : "no"))
-    console.log("ALLOWED=" + t.isTargetAllowedForThisMachine(t.getDefaultTargetKey()))
-  ' "$LAUNCHER" 2>&1)
-  lrc=$?
-  lcur=$(echo "$lout" | sed -n 's/^CURRENT=//p')
-  lbin=$(echo "$lout" | sed -n 's/^BINARY=//p')
-  lall=$(echo "$lout" | sed -n 's/^ALLOWED=//p')
-  if [ "$lrc" -eq 0 ] && [ -n "$lcur" ] && [ "$lcur" != "null" ] && [ "$lbin" = "yes" ]; then
-    ok "getCurrentVersion()=$lcur (non-null), binary=$lbin, target allowed=$lall -> update triggered: false"
+# Dynamic launcher check is part of the full --doctor stack; the default
+# status mode stays static so a changed launcher path can't flip it DEGRADED.
+if [ "$DOCTOR_MODE" = 1 ]; then
+  hdr "launcher  $DIM(/usr/local/lib/node_modules/freebuff/launcher.js)$RESET"
+  LAUNCHER="/usr/local/lib/node_modules/freebuff/launcher.js"
+  if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
+    lout=$(node -e '
+      const { createLauncher } = require(process.argv[1])
+      const l = createLauncher({ packageName: "freebuff", displayName: "Freebuff", includeTreeSitterWasm: true })
+      const t = l.__testing
+      const cur = t.getCurrentVersion()
+      const defKey = (typeof t.getDefaultTargetKey === "function") ? t.getDefaultTargetKey() : "linux-x64"
+      console.log("CURRENT=" + (cur === null ? "null" : cur))
+      console.log("BINARY=" + (require("fs").existsSync(t.CONFIG.binaryPath) ? "yes" : "no"))
+      console.log("ALLOWED=" + (t.isTargetAllowedForThisMachine ? t.isTargetAllowedForThisMachine(defKey) : true))
+    ' "$LAUNCHER" 2>&1)
+    lrc=$?
+    lcur=$(echo "$lout" | sed -n 's/^CURRENT=//p')
+    lbin=$(echo "$lout" | sed -n 's/^BINARY=//p')
+    lall=$(echo "$lout" | sed -n 's/^ALLOWED=//p')
+    if [ "$lrc" -eq 0 ] && [ -n "$lcur" ] && [ "$lcur" != "null" ] && [ "$lbin" = "yes" ]; then
+      ok "getCurrentVersion()=$lcur (non-null), binary=$lbin, target allowed=$lall -> update triggered: false"
+    else
+      bad "autoupdate NOT blocked (cur=${lcur:-err} bin=${lbin:-?} allowed=${lall:-?}) — re-pin metadata"
+      status=1
+    fi
   else
-    bad "autoupdate NOT blocked (cur=${lcur:-err} bin=${lbin:-?} allowed=${lall:-?}) — re-pin metadata"
+    bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
     status=1
   fi
-else
-  bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
-  status=1
 fi
 
 # ── 7. doctor.sh sections 11 + 12 (end-to-end validation) ─────────────────
