@@ -85,6 +85,41 @@ else
   w "service not running via systemd — resource checks skipped"
 fi
 
+say "== 10. swap devices (boot-time sanity) =="
+swap=$(swapon --show --noheadings 2>/dev/null)
+zram_sz=$(echo "$swap" | awk '$1=="/dev/zram0"{print $3}')
+swap_sz=$(echo "$swap" | awk '$1=="/swapfile"{print $3}')
+if [ "$zram_sz" = "4G" ]; then
+  ok "zram0 active at ${zram_sz}"
+else
+  bad "zram0 expected 4G, got '${zram_sz:-missing}'"
+fi
+if [ "$swap_sz" = "12G" ]; then
+  ok "/swapfile active at ${swap_sz}"
+else
+  bad "/swapfile expected 12G, got '${swap_sz:-missing}'"
+fi
+
+say "== 11. session protection =="
+CONF="$HOME/.config/manicode/session-protect.conf"
+GUARD_SVC="freebuff-owner-guard.service"
+META="$HOME/.config/manicode/freebuff-metadata.json"
+if [ -f "$CONF" ] && grep -q '^PROTECT_FROM_TAKEOVER=1' "$CONF" && grep -q '^BLOCK_AUTOUPDATE=1' "$CONF"; then
+  ok "session-protect.conf present (takeover + autoupdate blocked)"
+else
+  bad "session-protect.conf missing/incomplete — session not hardcoded"
+fi
+if command -v systemctl >/dev/null 2>&1 && systemctl --user is-active "$GUARD_SVC" >/dev/null 2>&1; then
+  ok "$GUARD_SVC active"
+else
+  bad "$GUARD_SVC not active — takeover guard down"
+fi
+if [ -f "$META" ] && grep -q '"version": *"999.999.999"' "$META"; then
+  ok "metadata pinned 999.999.999 (auto-update blocked)"
+else
+  bad "metadata not pinned — launcher may kill session for update"
+fi
+
 say
 if [ $fail -eq 0 ]; then
   say "RESULT: GO ($warn warnings)"
