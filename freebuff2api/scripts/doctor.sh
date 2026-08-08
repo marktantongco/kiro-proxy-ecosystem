@@ -120,6 +120,34 @@ else
   bad "metadata not pinned — launcher may kill session for update"
 fi
 
+say "== 12. launcher autoupdate decision (real getCurrentVersion) =="
+LAUNCHER="${FB2API_LAUNCHER:-/usr/local/lib/node_modules/freebuff/launcher.js}"
+if [ -f "$LAUNCHER" ] && command -v node >/dev/null 2>&1; then
+  # Run the REAL launcher module: getCurrentVersion() must be non-null and
+  # >= the npm latest so checkForUpdates (currentVersion===null || cmp<0)
+  # evaluates to false — i.e. the update/kill path can never fire.
+  out=$(node -e '
+    const { createLauncher } = require(process.argv[1])
+    const l = createLauncher({ packageName: "freebuff", displayName: "Freebuff", includeTreeSitterWasm: true })
+    const t = l.__testing
+    const cur = t.getCurrentVersion()
+    console.log("CURRENT=" + (cur === null ? "null" : cur))
+    console.log("BINARY=" + (require("fs").existsSync(t.CONFIG.binaryPath) ? "yes" : "no"))
+    console.log("UPDATE=" + (cur === null ? "true" : "false"))
+  ' "$LAUNCHER" 2>&1)
+  rc=$?
+  cur=$(echo "$out" | sed -n 's/^CURRENT=//p')
+  bin=$(echo "$out" | sed -n 's/^BINARY=//p')
+  upd=$(echo "$out" | sed -n 's/^UPDATE=//p')
+  if [ "$rc" -eq 0 ] && [ -n "$cur" ] && [ "$cur" != "null" ] && [ "$upd" = "false" ]; then
+    ok "getCurrentVersion()=$cur (non-null), binary=$bin -> update triggered: false"
+  else
+    bad "autoupdate NOT blocked (cur=${cur:-err} bin=${bin:-?} update=${upd:-?}) — re-pin metadata"
+  fi
+else
+  bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
+fi
+
 say
 if [ $fail -eq 0 ]; then
   say "RESULT: GO ($warn warnings)"
