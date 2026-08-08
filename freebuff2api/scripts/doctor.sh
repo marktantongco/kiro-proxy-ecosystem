@@ -184,6 +184,33 @@ else
   bad "launcher.js or node missing ($LAUNCHER) — cannot verify autoupdate block"
 fi
 
+say "== 13. pin-survival (metadata outside node_modules, no install scripts) =="
+# The pin only protects across reinstalls/upgrades if (a) the metadata file
+# lives OUTSIDE npm's managed tree and (b) the package has no install-time
+# scripts that could rewrite it. Proven by a real isolated reinstall/upgrade.
+PKG_DIR="${FB2API_PKG:-/usr/local/lib/node_modules/freebuff}"
+PKG_JSON="$PKG_DIR/package.json"
+META="$HOME/.config/manicode/freebuff-metadata.json"
+NM_PREFIX=$(dirname "$(dirname "$PKG_DIR")" 2>/dev/null)   # e.g. /usr/local/lib/node_modules
+if [ -f "$META" ]; then
+  case "$META" in
+    "$NM_PREFIX"/*) bad "metadata INSIDE node_modules tree ($META) — npm reinstall would wipe the pin";;
+    *) ok "metadata outside node_modules ($META)";;
+  esac
+else
+  bad "metadata file missing ($META)"
+fi
+if [ -f "$PKG_JSON" ]; then
+  SCRIPTS=$(node -e 'const p=require(process.argv[1]);const s=Object.keys(p.scripts||{});console.log(s.filter(k=>k==="install"||k==="postinstall"||k==="preinstall").join(" "))' "$PKG_JSON" 2>/dev/null)
+  if [ -z "$SCRIPTS" ]; then
+    ok "package has no install/postinstall/preinstall scripts ($(node -e 'console.log(require(process.argv[1]).version||"")' "$PKG_JSON" 2>/dev/null)) — reinstall cannot rewrite the pin"
+  else
+    bad "package HAS install-time scripts: $SCRIPTS — reinstall could rewrite metadata"
+  fi
+else
+  bad "package.json not found ($PKG_JSON) — cannot verify install scripts"
+fi
+
 say
 if [ $fail -eq 0 ]; then
   say "RESULT: GO ($warn warnings)"
