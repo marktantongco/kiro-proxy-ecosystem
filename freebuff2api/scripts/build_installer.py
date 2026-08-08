@@ -36,6 +36,7 @@ MANIFEST: list[tuple[str, str, int]] = [
     # ── entrypoints / packaging ────────────────────────────────────────────
     ("main.py", "repo/main.py", 0o644),
     ("pyproject.toml", "repo/pyproject.toml", 0o644),
+    ("README.md", "repo/README.md", 0o644),  # hatchling requires readme on build
     (".env.example", "repo/.env.example", 0o644),
     # ── systemd units + journald drop-in ───────────────────────────────────
     ("deploy/freebuff2api.service", "repo/deploy/freebuff2api.service", 0o644),
@@ -268,7 +269,6 @@ step_systemd() {
 step_backup() {
   [ "$DO_BACKUP" = true ] || { warn "backup skipped (--no-backup)"; return; }
   log "installing backup timer + journald rotation"
-  cp "$F2A_HOME/backup.sh" "$F2A_HOME/backup.sh"
   chmod 750 "$F2A_HOME/backup.sh"
   chown "$F2A_USER:$F2A_USER" "$F2A_HOME/backup.sh"
   sed -i "s|/var/lib/freebuff2api|$F2A_HOME|g" "$F2A_HOME/backup.sh"
